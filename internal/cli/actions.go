@@ -22,6 +22,9 @@ type actionCmdOptions struct {
 	input  string
 }
 
+var runShortcut = shortcuts.Run
+var loadConfig = config.Load
+
 func addActionCommands(root *cobra.Command, defs []discovery.ActionDef, opts *rootOptions) {
 	for _, def := range defs {
 		if def.Transport != discovery.TransportShortcuts {
@@ -48,7 +51,7 @@ func addActionCommands(root *cobra.Command, defs []discovery.ActionDef, opts *ro
 }
 
 func runActionCommand(ctx context.Context, def discovery.ActionDef, cmdOpts *actionCmdOptions, opts *rootOptions) error {
-	cfg, _, err := config.Load(discovery.DefaultActionDefinitions())
+	cfg, _, err := loadConfig(discovery.DefaultActionDefinitions())
 	if err != nil {
 		return err
 	}
@@ -60,7 +63,7 @@ func runActionCommand(ctx context.Context, def discovery.ActionDef, cmdOpts *act
 	if err != nil {
 		return err
 	}
-	out, err := shortcuts.Run(ctx, wrapperName, input)
+	out, err := runShortcut(ctx, wrapperName, input)
 	if err != nil {
 		return err
 	}

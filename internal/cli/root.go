@@ -18,6 +18,8 @@ type rootOptions struct {
 	config string
 }
 
+const envDisableDiscovery = "STREAKS_CLI_DISABLE_DISCOVERY"
+
 func newRootCmd() *cobra.Command {
 	opts := &rootOptions{}
 	cmd := &cobra.Command{
@@ -43,15 +45,17 @@ func newRootCmd() *cobra.Command {
 	cmd.AddCommand(newInstallCmd(opts))
 	cmd.AddCommand(newOpenCmd(opts))
 
-	ctx := context.Background()
-	disc, err := discovery.Discover(ctx)
 	defs := discovery.DefaultActionDefinitions()
-	if err == nil && len(disc.Actions) > 0 {
-		present := make(map[string]discovery.Action, len(disc.Actions))
-		for _, action := range disc.Actions {
-			present[action.ID] = action
+	if os.Getenv(envDisableDiscovery) == "" {
+		ctx := context.Background()
+		disc, err := discovery.Discover(ctx)
+		if err == nil && len(disc.Actions) > 0 {
+			present := make(map[string]discovery.Action, len(disc.Actions))
+			for _, action := range disc.Actions {
+				present[action.ID] = action
+			}
+			defs = filterDefs(defs, present)
 		}
-		defs = filterDefs(defs, present)
 	}
 	addActionCommands(cmd, defs, opts)
 
