@@ -67,15 +67,15 @@ func TestRunActionCommandUsesWrapper(t *testing.T) {
 		input []byte
 	}{}
 
-	runShortcut = func(ctx context.Context, name string, input []byte) ([]byte, error) {
+	runShortcut = func(_ context.Context, name string, input []byte) ([]byte, error) {
 		called.name = name
 		called.input = input
 		return []byte(`{"ok":true}`), nil
 	}
-	shortcutExists = func(ctx context.Context, name string) (bool, error) {
+	shortcutExists = func(_ context.Context, name string) (bool, error) {
 		return true, nil
 	}
-	loadConfig = func(defs []discovery.ActionDef) (config.Config, bool, error) {
+	loadConfig = func(_ []discovery.ActionDef) (config.Config, bool, error) {
 		return config.Config{WrapperPrefix: "streaks-cli", Wrappers: map[string]string{"task-list": "wrapper"}}, true, nil
 	}
 

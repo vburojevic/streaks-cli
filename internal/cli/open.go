@@ -7,11 +7,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newOpenCmd(opts *rootOptions) *cobra.Command {
+func newOpenCmd(_ *rootOptions) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "open",
 		Short: "Open Streaks via URL scheme",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			return openURL("streaks://")
 		},
 	}

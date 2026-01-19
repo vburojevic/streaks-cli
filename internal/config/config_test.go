@@ -13,7 +13,7 @@ func TestConfigPathOverride(t *testing.T) {
 	os.Setenv(EnvConfigPath, path)
 	defer os.Unsetenv(EnvConfigPath)
 
-	got, err := ConfigPath()
+	got, err := Path()
 	if err != nil {
 		t.Fatalf("ConfigPath: %v", err)
 	}

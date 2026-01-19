@@ -67,7 +67,7 @@ func runDoctor(ctx context.Context) (doctorReport, error) {
 	report := doctorReport{}
 	defActions := discovery.DefaultActionDefinitions()
 	cfg, present, _ := config.Load(defActions)
-	configPath, _ := config.ConfigPath()
+	configPath, _ := config.Path()
 	report.ConfigPath = configPath
 	report.ConfigPresent = present
 

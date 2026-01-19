@@ -40,7 +40,7 @@ func newActionsListCmd(opts *rootOptions) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List available actions",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			infos := make([]actionInfo, 0)
 			for _, def := range availableActionDefs() {
 				if def.Transport != discovery.TransportShortcuts {

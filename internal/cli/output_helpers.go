@@ -22,4 +22,3 @@ func (o *rootOptions) mode() outputMode {
 
 func (o *rootOptions) isJSON() bool  { return o.mode() == outputJSON }
 func (o *rootOptions) isPlain() bool { return o.mode() == outputPlain }
-func (o *rootOptions) isHuman() bool { return o.mode() == outputHuman }

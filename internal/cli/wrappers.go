@@ -163,7 +163,7 @@ func newWrappersDoctorCmd(opts *rootOptions) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			configPath, _ := config.ConfigPath()
+			configPath, _ := config.Path()
 			missing, err := missingWrappers(context.Background(), cfg.Wrappers)
 			if err != nil {
 				return err

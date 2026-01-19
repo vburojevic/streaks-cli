@@ -1,9 +1,6 @@
 package cli
 
-import (
-	"errors"
-	"fmt"
-)
+import "errors"
 
 const (
 	ExitCodeUsage            = 2
@@ -32,15 +29,4 @@ func exitCodeFromError(err error) (int, error) {
 		return ee.Code, ee.Err
 	}
 	return 0, err
-}
-
-func formatExitError(err error) error {
-	if err == nil {
-		return nil
-	}
-	code, inner := exitCodeFromError(err)
-	if code == 0 {
-		return err
-	}
-	return fmt.Errorf("%w", inner)
 }

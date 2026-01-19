@@ -41,7 +41,7 @@ func WrapperName(prefix, actionID string) string {
 	return fmt.Sprintf("%s %s", prefix, actionID)
 }
 
-func ConfigPath() (string, error) {
+func Path() (string, error) {
 	if override := os.Getenv(EnvConfigPath); override != "" {
 		return override, nil
 	}
@@ -53,7 +53,7 @@ func ConfigPath() (string, error) {
 }
 
 func Load(actions []discovery.ActionDef) (Config, bool, error) {
-	path, err := ConfigPath()
+	path, err := Path()
 	if err != nil {
 		return Config{}, false, err
 	}
@@ -78,7 +78,7 @@ func Load(actions []discovery.ActionDef) (Config, bool, error) {
 }
 
 func Write(cfg Config, force bool) (string, error) {
-	path, err := ConfigPath()
+	path, err := Path()
 	if err != nil {
 		return "", err
 	}

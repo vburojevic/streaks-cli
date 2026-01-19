@@ -20,7 +20,7 @@ func newInstallCmd(opts *rootOptions) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "install",
 		Short: "Install or verify wrapper shortcuts and config",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			defs := discovery.DefaultActionDefinitions()
 			cfg := config.DefaultConfig(defs)
 			path, err := config.Write(cfg, force)
