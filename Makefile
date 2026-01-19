@@ -1,4 +1,4 @@
-BIN=bin/streaks-cli
+BIN=bin/st
 
 .PHONY: build test lint release-dry integration
 

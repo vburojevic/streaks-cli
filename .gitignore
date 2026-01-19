@@ -1,6 +1,7 @@
 # Go build artifacts
 /bin/
 /streaks-cli
+/st
 /dist/
 *.exe
 *.exe~

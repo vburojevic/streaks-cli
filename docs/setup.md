@@ -9,20 +9,20 @@ scheme.
 Run discovery any time Streaks updates:
 
 ```
-streaks-cli discover
+st discover
 ```
 
 Discovery reads the app bundle on disk (`Info.plist` + `Localizable.strings`) to
 identify supported App Intents and URL schemes. It does **not** read the
 Shortcuts database or reverse engineer binaries.
 
-If new App Intent keys appear, re-run `streaks-cli install` and update wrapper
+If new App Intent keys appear, re-run `st install` and update wrapper
 shortcuts to match the new capabilities.
 
 ## Install
 
 ```
-streaks-cli install
+st install
 ```
 
 This writes the config file and reports which wrapper shortcuts are missing. The
@@ -32,7 +32,7 @@ so wrappers must be created manually.
 Optional checklist:
 
 ```
-streaks-cli install --checklist wrappers-checklist.txt
+st install --checklist wrappers-checklist.txt
 ```
 
 ## Wrapper shortcuts (manual)
@@ -58,14 +58,14 @@ Wrapper names are deterministic and listed in `~/.config/streaks-cli/config.json
 Default names follow this pattern:
 
 ```
-streaks-cli <action-id>
+st <action-id>
 ```
 
 To list wrappers and sample inputs:
 
 ```
-streaks-cli wrappers list
-streaks-cli wrappers sample task-complete
+st wrappers list
+st wrappers sample task-complete
 ```
 
 ### Action map
@@ -87,7 +87,7 @@ Match each wrapper to the Streaks action shown in Shortcuts:
 After creating wrappers, verify:
 
 ```
-streaks-cli doctor
+st doctor
 ```
 
 See `docs/wrappers.md` for more detail.

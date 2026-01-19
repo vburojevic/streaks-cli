@@ -65,6 +65,14 @@ func runActionCommand(ctx context.Context, def discovery.ActionDef, cmdOpts *act
 	if err != nil {
 		return err
 	}
+	if !exists && cfg.WrapperPrefix == config.DefaultWrapperPrefix {
+		legacy := config.WrapperName(config.LegacyWrapperPrefix, def.ID)
+		legacyExists, legacyErr := shortcutExists(ctx, legacy)
+		if legacyErr == nil && legacyExists {
+			wrapperName = legacy
+			exists = true
+		}
+	}
 	if !exists {
 		return exitError(ExitCodeWrappersMissing, fmt.Errorf("wrapper shortcut not found: %s", wrapperName))
 	}

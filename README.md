@@ -1,6 +1,6 @@
 # streaks-cli
 
-A macOS command-line interface for the Streaks (Crunchy Bagel) app.
+A macOS command-line interface for the Streaks (Crunchy Bagel) app. The command name is `st`.
 
 This CLI integrates with Streaks using **official automation surfaces only**:
 Shortcuts actions (App Intents) and the `streaks://` URL scheme.
@@ -13,16 +13,16 @@ Shortcuts actions (App Intents) and the `streaks://` URL scheme.
 ## Build
 
 ```
-go build -o bin/streaks-cli ./cmd/streaks-cli
+go build -o bin/st ./cmd/streaks-cli
 ```
 
 ## Quick start
 
 ```
-./bin/streaks-cli discover
-./bin/streaks-cli install
-./bin/streaks-cli doctor
-./bin/streaks-cli open
+./bin/st discover
+./bin/st install
+./bin/st doctor
+./bin/st open
 ```
 
 ## Commands
@@ -34,7 +34,7 @@ go build -o bin/streaks-cli ./cmd/streaks-cli
 - `open` – open Streaks via URL scheme
 - `<action>` – run a Streaks action via wrapper shortcut
 
-Run `streaks-cli --help` to see all action commands.
+Run `st --help` to see all action commands.
 
 ## Config
 
@@ -46,9 +46,9 @@ Override via `STREAKS_CLI_CONFIG` or `--config`.
 Use structured output for agents:
 
 ```
-streaks-cli --agent discover
-streaks-cli --agent doctor
-streaks-cli --agent wrappers list
+st --agent discover
+st --agent doctor
+st --agent wrappers list
 ```
 
 `--agent` implies `--json` and disables pretty formatting for stable parsing.

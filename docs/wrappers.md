@@ -1,23 +1,23 @@
 # Wrapper Shortcuts Guide
 
-Wrapper shortcuts connect `streaks-cli` to Streaks’ Shortcuts actions.
+Wrapper shortcuts connect `st` to Streaks’ Shortcuts actions.
 
 ## List required wrappers
 
 ```
-streaks-cli wrappers list
+st wrappers list
 ```
 
 ## Generate input templates
 
 ```
-streaks-cli wrappers sample task-complete
+st wrappers sample task-complete
 ```
 
 ## Checklist file
 
 ```
-streaks-cli install --checklist wrappers-checklist.txt
+st install --checklist wrappers-checklist.txt
 ```
 
 ## Manual creation steps

@@ -1,7 +1,7 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `cmd/streaks-cli/`: CLI entrypoint.
+- `cmd/st/`: CLI entrypoint.
 - `internal/cli/`: Cobra commands and exit-code handling.
 - `internal/discovery/`: App bundle discovery (Info.plist + Localizable.strings).
 - `internal/shortcuts/`: Shortcuts CLI integration.
@@ -12,7 +12,7 @@
 - `.github/workflows/`: CI workflows.
 
 ## Build, Test, and Development Commands
-- `make build` — build `bin/streaks-cli`.
+- `make build` — build `bin/st`.
 - `make test` — run all unit tests.
 - `make lint` — run golangci-lint.
 - `make integration` — run integration tests (requires Streaks).

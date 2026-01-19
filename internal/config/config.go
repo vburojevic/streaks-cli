@@ -14,7 +14,8 @@ const (
 	DefaultConfigDirName  = "streaks-cli"
 	DefaultConfigFileName = "config.json"
 	EnvConfigPath         = "STREAKS_CLI_CONFIG"
-	DefaultWrapperPrefix  = "streaks-cli"
+	DefaultWrapperPrefix  = "st"
+	LegacyWrapperPrefix   = "streaks-cli"
 )
 
 type Config struct {

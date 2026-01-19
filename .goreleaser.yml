@@ -7,7 +7,7 @@ before:
 builds:
   - id: streaks-cli
     main: ./cmd/streaks-cli
-    binary: streaks-cli
+    binary: st
     env:
       - CGO_ENABLED=0
     goos:
@@ -39,7 +39,7 @@ brews:
     description: CLI for Streaks (Crunchy Bagel)
     license: MIT
     test: |
-      system "#{bin}/streaks-cli", "--version"
+      system "#{bin}/st", "--version"
 
 changelog:
   sort: asc

@@ -2,12 +2,12 @@
 
 ## Streaks app not found
 - Verify Streaks is installed in `/Applications/Streaks.app`.
-- Re-run: `streaks-cli discover`.
+- Re-run: `st discover`.
 
 ## Wrapper shortcut missing
-- Run: `streaks-cli wrappers list` to see expected names.
+- Run: `st wrappers list` to see expected names.
 - Create missing shortcuts in Shortcuts.
-- Re-run: `streaks-cli doctor`.
+- Re-run: `st doctor`.
 
 ## Shortcuts permission prompts
 - The first run may prompt for automation permissions.
@@ -19,7 +19,7 @@
 
 ## Homebrew install issues
 - Ensure the tap is added: `brew tap vburojevic/tap`.
-- Update: `brew update` then `brew upgrade streaks-cli`.
+- Update: `brew update` then `brew upgrade st`.
 
 ## Agent output parsing
 - Use `--agent` or `--json` for machine-readable output.

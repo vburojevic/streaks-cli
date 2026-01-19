@@ -28,7 +28,7 @@ const envJSONOutput = "STREAKS_CLI_JSON"
 func newRootCmd() *cobra.Command {
 	opts := &rootOptions{}
 	cmd := &cobra.Command{
-		Use:           "streaks-cli",
+		Use:           "st",
 		Short:         "CLI for Streaks (Crunchy Bagel)",
 		Long:          "CLI for Streaks (Crunchy Bagel).\n\nFor automation/agents, use --agent or --json for structured output.",
 		Version:       version,
