@@ -32,6 +32,13 @@ st open
 
 If wrappers are missing, follow `docs/wrappers.md` to create them in Shortcuts.
 
+## Testing
+
+```
+make test
+make smoke   # requires Streaks installed
+```
+
 ## Common usage
 
 ```
