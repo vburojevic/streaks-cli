@@ -5,61 +5,50 @@ A macOS command-line interface for the Streaks (Crunchy Bagel) app. The command 
 This CLI integrates with Streaks using **official automation surfaces only**:
 Shortcuts actions (App Intents) and the `streaks://` URL scheme.
 
-## Requirements
+## Install
 
-- macOS with Streaks installed
-- Shortcuts app (`/usr/bin/shortcuts`)
-
-## Build
+### Homebrew
 
 ```
-go build -o bin/st ./cmd/streaks-cli
+brew tap vburojevic/tap
+brew install streaks-cli
+```
+
+### From source
+
+```
+make build
+./bin/st --help
 ```
 
 ## Quick start
 
 ```
-./bin/st discover
-./bin/st install
-./bin/st doctor
-./bin/st open
+st discover
+st install
+st doctor
+st open
 ```
 
-## Commands
+If wrappers are missing, follow `docs/wrappers.md` to create them in Shortcuts.
 
-- `discover` – print discovered capabilities as JSON
-- `doctor` – verify Streaks installation and wrapper setup
-- `install` – write config and report missing wrappers
-- `wrappers` – list wrappers and sample inputs
-- `wrappers verify` – validate wrappers return JSON
-- `wrappers doctor` – full wrapper readiness report
-- `actions` – list and describe available actions
-- `open` – open Streaks via URL scheme
-- `<action>` – run a Streaks action via wrapper shortcut
-
-Run `st --help` to see all action commands.
-
-## Config
-
-Config is stored at `~/.config/streaks-cli/config.json`.
-Override via `STREAKS_CLI_CONFIG` or `--config`.
-
-## AI Agent Usage
-
-Use structured output for agents:
+## Common usage
 
 ```
+# Run a task action
+st task-complete --task "Read 20 pages"
+
+# Agent-friendly JSON
 st --agent discover
-st --agent doctor
-st --agent wrappers list
-st --agent actions list
+
+# Plain output for scripts
+st --output plain wrappers list
+
+# Dry-run to see wrapper payload
+st task-complete --task "Read" --dry-run
 ```
 
-`--agent` implies `--json` and disables pretty formatting for stable parsing.
-On failures, the CLI returns JSON errors to stderr (e.g. `{"error":"...","code":10}`).
-You can also set `STREAKS_CLI_AGENT=1`.
-
-## Output Modes
+## Output modes
 
 ```
 st --output human   # default
@@ -69,18 +58,38 @@ st --output plain   # line-based output
 
 `--json` is equivalent to `--output json`.
 
-## Action Inputs
+Errors are printed as JSON to stderr in JSON mode, e.g.:
 
-- Use `--stdin` to force stdin JSON input.
-- Use `--dry-run` to print the wrapper and payload without running.
-- Use `--trace <file>` to append JSON trace records of input/output.
-- Use `--timeout`, `--retries`, `--retry-delay` to control Shortcuts execution.
+```json
+{"error":"message","code":10}
+```
+
+## Agent usage
+
+Use `--agent` or `STREAKS_CLI_AGENT=1` for deterministic JSON output:
+
+```
+st --agent doctor
+st --agent wrappers list
+st --agent actions list
+```
+
+## Config
+
+Config is stored at `~/.config/streaks-cli/config.json`.
+Override via `STREAKS_CLI_CONFIG` or `--config`.
+
+## Command reference
+
+- `docs/commands.md` – full command/flag reference.
+- `docs/schema.md` – JSON output schema.
 
 ## Docs
 
-See `docs/setup.md` for discovery details and wrapper shortcut setup.
-See `docs/wrappers.md` and `docs/faq.md` for troubleshooting.
-See `docs/schema.md` for JSON output schema.
+- `docs/setup.md` – discovery + setup
+- `docs/wrappers.md` – wrapper creation, verify/doctor
+- `docs/faq.md` – troubleshooting
+- `docs/release.md` – release workflow
 
 ## License
 

@@ -1,5 +1,7 @@
 # JSON Output Schema
 
+Use `--output json` or `--agent` to enable JSON output.
+
 All JSON outputs are UTF-8 and printed to stdout. Errors are printed to stderr as:
 
 ```json

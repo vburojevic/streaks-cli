@@ -96,4 +96,4 @@ After creating wrappers, verify:
 st doctor
 ```
 
-See `docs/wrappers.md` for more detail.
+See `docs/wrappers.md` and `docs/commands.md` for more detail.

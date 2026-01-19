@@ -8,7 +8,13 @@ Wrapper shortcuts connect `st` to Streaks’ Shortcuts actions.
 st wrappers list
 ```
 
-## Verify wrappers
+## Generate input templates
+
+```
+st wrappers sample task-complete
+```
+
+## Validate wrapper output
 
 ```
 st wrappers verify --task "Example Task"
@@ -18,12 +24,6 @@ st wrappers verify --task "Example Task"
 
 ```
 st wrappers doctor --task "Example Task"
-```
-
-## Generate input templates
-
-```
-st wrappers sample task-complete
 ```
 
 ## Checklist file

@@ -17,13 +17,14 @@
 - Re-run discovery and review `Unmapped App Intent Keys` in the output.
 - Update wrappers and mapping if Streaks adds new actions.
 
+## Output formats
+- Use `--output json` or `--agent` for machine-readable output.
+- Use `--output plain` for stable line-based output.
+
+## Wrapper validation fails
+- Run `st wrappers verify --task "Example"`.
+- Ensure wrapper shortcuts return a Dictionary/JSON.
+
 ## Homebrew install issues
 - Ensure the tap is added: `brew tap vburojevic/tap`.
-- Update: `brew update` then `brew upgrade st`.
-
-## Agent output parsing
-- Use `--agent` or `--json` for machine-readable output.
-- Error responses are JSON when `--agent` is enabled.
-
-## Output formats
-- `--output human` (default), `--output json`, or `--output plain`.
+- Update: `brew update` then `brew upgrade streaks-cli`.
