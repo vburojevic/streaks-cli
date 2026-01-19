@@ -9,6 +9,7 @@ This is a concise reference for `st`. Run `st --help` or `st <command> --help` f
 - `--plain` – alias for `--output plain`.
 - `--agent` – agent mode (JSON output, no pretty formatting).
 - `--quiet` / `--verbose` – reduce or increase output.
+- `--no-output` – suppress all output (exit code only).
 - `--timeout` – Shortcuts run timeout (default: 30s).
 - `--retries` / `--retry-delay` – retry Shortcuts runs on failure.
 - `--config` – override config path.

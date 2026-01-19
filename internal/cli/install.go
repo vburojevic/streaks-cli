@@ -58,6 +58,12 @@ func newInstallCmd(opts *rootOptions) *cobra.Command {
 				}
 				return nil
 			}
+			if opts.noOutput {
+				if len(missing) > 0 {
+					return exitError(ExitCodeWrappersMissing, fmt.Errorf("missing %d wrapper shortcuts", len(missing)))
+				}
+				return nil
+			}
 
 			if opts.isPlain() {
 				if !opts.quiet {

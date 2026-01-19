@@ -120,6 +120,9 @@ func newWrappersVerifyCmd(opts *rootOptions) *cobra.Command {
 				}
 				return verifyErr
 			}
+			if opts.noOutput {
+				return verifyErr
+			}
 			if opts.isPlain() {
 				for _, res := range results {
 					fmt.Printf("%s\t%s\t%t\t%t\t%t\t%s\n", res.ID, res.Wrapper, res.Exists, res.OutputValid, res.Skipped, res.Error)
@@ -179,6 +182,12 @@ func newWrappersDoctorCmd(opts *rootOptions) *cobra.Command {
 				if err := output.PrintJSON(os.Stdout, report, opts.pretty); err != nil {
 					return err
 				}
+				if len(missing) > 0 {
+					return exitError(ExitCodeWrappersMissing, fmt.Errorf("missing %d wrapper shortcuts", len(missing)))
+				}
+				return nil
+			}
+			if opts.noOutput {
 				if len(missing) > 0 {
 					return exitError(ExitCodeWrappersMissing, fmt.Errorf("missing %d wrapper shortcuts", len(missing)))
 				}

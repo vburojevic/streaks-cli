@@ -45,6 +45,9 @@ func newDoctorCmd(opts *rootOptions) *cobra.Command {
 				}
 				return doctorExitError(report)
 			}
+			if opts.noOutput {
+				return doctorExitError(report)
+			}
 			if opts.isPlain() {
 				if !opts.quiet || doctorExitError(report) != nil {
 					printDoctorPlain(report)

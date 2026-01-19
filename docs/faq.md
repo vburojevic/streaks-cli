@@ -20,6 +20,7 @@
 ## Output formats
 - Use `--output json` or `--agent` for machine-readable output.
 - Use `--output plain` for stable line-based output.
+- Use `--no-output` when only exit codes matter.
 
 ## Wrapper validation fails
 - Run `st wrappers verify --task "Example"`.

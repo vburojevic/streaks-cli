@@ -90,6 +90,14 @@ func runActionCommand(ctx context.Context, def discovery.ActionDef, cmdOpts *act
 		return printDryRun(opts, wrapperName, input)
 	}
 
+	if opts != nil && opts.noOutput {
+		_, err := runShortcutWithRetry(ctx, wrapperName, input, opts)
+		if err != nil {
+			return exitError(ExitCodeActionFailed, err)
+		}
+		return nil
+	}
+
 	ctxRun := ctx
 	if opts != nil && opts.timeout > 0 {
 		var cancel context.CancelFunc

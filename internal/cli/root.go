@@ -24,6 +24,7 @@ type rootOptions struct {
 	plain     bool
 	quiet     bool
 	verbose   bool
+	noOutput  bool
 	timeout   time.Duration
 	retries   int
 	retryWait time.Duration
@@ -84,6 +85,7 @@ func newRootCmd() *cobra.Command {
 	cmd.PersistentFlags().BoolVar(&opts.agent, "agent", false, "Agent-friendly mode (implies --json, disables pretty JSON)")
 	cmd.PersistentFlags().BoolVar(&opts.quiet, "quiet", false, "Suppress non-essential output")
 	cmd.PersistentFlags().BoolVar(&opts.verbose, "verbose", false, "Verbose output")
+	cmd.PersistentFlags().BoolVar(&opts.noOutput, "no-output", false, "Suppress all output (exit code only)")
 	cmd.PersistentFlags().DurationVar(&opts.timeout, "timeout", 30*time.Second, "Timeout for Shortcuts runs")
 	cmd.PersistentFlags().IntVar(&opts.retries, "retries", 0, "Retry failed Shortcuts runs")
 	cmd.PersistentFlags().DurationVar(&opts.retryWait, "retry-delay", time.Second, "Initial delay between retries")

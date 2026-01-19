@@ -64,6 +64,7 @@ st --output plain   # line-based output
 ```
 
 `--json` is equivalent to `--output json`.
+`--no-output` suppresses all output (exit code only).
 
 Errors are printed as JSON to stderr in JSON mode, e.g.:
 

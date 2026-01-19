@@ -4,6 +4,9 @@ func (o *rootOptions) mode() outputMode {
 	if o == nil {
 		return outputHuman
 	}
+	if o.noOutput {
+		return outputPlain
+	}
 	if o.json {
 		return outputJSON
 	}

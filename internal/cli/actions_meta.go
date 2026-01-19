@@ -58,6 +58,9 @@ func newActionsListCmd(opts *rootOptions) *cobra.Command {
 			if opts.isJSON() {
 				return output.PrintJSON(os.Stdout, infos, opts.pretty)
 			}
+			if opts.noOutput {
+				return nil
+			}
 			if opts.isPlain() {
 				for _, info := range infos {
 					fmt.Printf("%s\t%t\n", info.ID, info.RequiresTask)
@@ -108,6 +111,9 @@ func newActionsDescribeCmd(opts *rootOptions) *cobra.Command {
 			}
 			if opts.isJSON() {
 				return output.PrintJSON(os.Stdout, detail, opts.pretty)
+			}
+			if opts.noOutput {
+				return nil
 			}
 			if opts.isPlain() {
 				return output.PrintJSON(os.Stdout, detail, false)

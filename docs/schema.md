@@ -2,6 +2,15 @@
 
 Use `--output json` or `--agent` to enable JSON output.
 
+## Exit codes
+
+- `0` success
+- `2` invalid usage
+- `10` Streaks app not found
+- `11` Shortcuts CLI missing or failed
+- `12` wrapper shortcuts missing
+- `13` action execution failed
+
 All JSON outputs are UTF-8 and printed to stdout. Errors are printed to stderr as:
 
 ```json
