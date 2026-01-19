@@ -1,0 +1,49 @@
+version: 2
+
+before:
+  hooks:
+    - go test ./...
+
+builds:
+  - id: streaks-cli
+    main: ./cmd/streaks-cli
+    binary: streaks-cli
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w -X streaks-cli/internal/cli.version={{.Version}}
+
+archives:
+  - id: streaks-cli
+    format: tar.gz
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}
+    files:
+      - LICENSE
+      - README.md
+      - docs/*
+
+brews:
+  - name: streaks-cli
+    repository:
+      owner: vburojevic
+      name: homebrew-tap
+      branch: main
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    homepage: https://github.com/vburojevic/streaks-cli
+    description: CLI for Streaks (Crunchy Bagel)
+    license: MIT
+    test: |
+      system "#{bin}/streaks-cli", "--version"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'

@@ -13,6 +13,7 @@
 ## Build, Test, and Development Commands
 - `go build -o bin/streaks-cli ./cmd/streaks-cli` — build the CLI binary.
 - `go test ./...` — run all unit tests.
+- `goreleaser release --clean` — build and publish releases (CI only).
 - `bin/streaks-cli discover` — print discovered capabilities.
 - `bin/streaks-cli doctor` — verify Streaks + wrapper setup.
 - `bin/streaks-cli install` — write config and report missing wrappers.
@@ -38,3 +39,8 @@
 - Do not read sandboxed databases or reverse-engineer binaries.
 - Automation is limited to official surfaces (Shortcuts, URL scheme).
 - Config path is `~/.config/streaks-cli/config.json` (override with `STREAKS_CLI_CONFIG`).
+
+## Release Workflow
+- Tag releases with `vX.Y.Z` (e.g., `v0.2.0`), then push the tag.
+- GitHub Actions runs GoReleaser to publish binaries and update the Homebrew tap.
+- Requires secret `HOMEBREW_TAP_GITHUB_TOKEN` with write access to `vburojevic/homebrew-tap`.
