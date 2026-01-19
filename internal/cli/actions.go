@@ -11,7 +11,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"streaks-cli/internal/config"
 	"streaks-cli/internal/discovery"
 	"streaks-cli/internal/output"
 	"streaks-cli/internal/shortcuts"
@@ -28,18 +27,8 @@ type actionCmdOptions struct {
 }
 
 var runShortcut = shortcuts.RunWithOptions
-var loadConfig = config.Load
-var shortcutExists = shortcuts.Exists
 var listShortcuts = shortcuts.List
 var discover = discovery.Discover
-
-type shortcutKind int
-
-const (
-	shortcutWrapper shortcutKind = iota
-	shortcutDirect
-	shortcutExplicit
-)
 
 func addActionCommands(root *cobra.Command, defs []discovery.ActionDef, opts *rootOptions) {
 	for _, def := range defs {
@@ -55,9 +44,9 @@ func addActionCommands(root *cobra.Command, defs []discovery.ActionDef, opts *ro
 				return runActionCommand(context.Background(), def, cmdOpts, opts)
 			},
 		}
-		cmd.Flags().StringVar(&cmdOpts.input, "input", "", "Raw input to pass to the wrapper (overrides --task/--status)")
+		cmd.Flags().StringVar(&cmdOpts.input, "input", "", "Raw input to pass to the shortcut (overrides --task/--status)")
 		cmd.Flags().BoolVar(&cmdOpts.stdin, "stdin", false, "Force reading input from stdin")
-		cmd.Flags().BoolVar(&cmdOpts.dryRun, "dry-run", false, "Print wrapper and payload without running")
+		cmd.Flags().BoolVar(&cmdOpts.dryRun, "dry-run", false, "Print shortcut and payload without running")
 		cmd.Flags().StringVar(&cmdOpts.trace, "trace", "", "Append JSON trace of input/output to a file")
 		cmd.Flags().StringVar(&cmdOpts.shortcut, "shortcut", "", "Run a specific shortcut by name/identifier (overrides auto-detection)")
 		if def.RequiresTask {
@@ -71,12 +60,7 @@ func addActionCommands(root *cobra.Command, defs []discovery.ActionDef, opts *ro
 }
 
 func runActionCommand(ctx context.Context, def discovery.ActionDef, cmdOpts *actionCmdOptions, opts *rootOptions) error {
-	cfg, _, err := loadConfig(discovery.DefaultActionDefinitions())
-	if err != nil {
-		return err
-	}
-
-	shortcutName, shortcutKind, err := resolveActionShortcut(ctx, def, cmdOpts, cfg)
+	shortcutName, err := resolveActionShortcut(ctx, def, cmdOpts)
 	if err != nil {
 		return err
 	}
@@ -89,7 +73,7 @@ func runActionCommand(ctx context.Context, def discovery.ActionDef, cmdOpts *act
 	}
 
 	if opts != nil && opts.noOutput {
-		_, err := runShortcutWithRetry(ctx, shortcutName, input, opts, shortcutRunOptions(shortcutKind))
+		_, err := runShortcutWithRetry(ctx, shortcutName, input, opts)
 		if err != nil {
 			return exitError(ExitCodeActionFailed, err)
 		}
@@ -103,18 +87,15 @@ func runActionCommand(ctx context.Context, def discovery.ActionDef, cmdOpts *act
 		defer cancel()
 	}
 
-	out, err := runShortcutWithRetry(ctxRun, shortcutName, input, opts, shortcutRunOptions(shortcutKind))
+	out, err := runShortcutWithRetry(ctxRun, shortcutName, input, opts)
 	if err != nil {
-		_ = appendTrace(cmdOpts.trace, traceEntry{Wrapper: shortcutName, Input: input, Error: err.Error()})
+		_ = appendTrace(cmdOpts.trace, traceEntry{Shortcut: shortcutName, Input: input, Error: err.Error()})
 		return exitError(ExitCodeActionFailed, err)
 	}
-	_ = appendTrace(cmdOpts.trace, traceEntry{Wrapper: shortcutName, Input: input, Output: out})
+	_ = appendTrace(cmdOpts.trace, traceEntry{Shortcut: shortcutName, Input: input, Output: out})
 	if opts.isJSON() || opts.isPlain() {
 		var payload any
 		if err := json.Unmarshal(out, &payload); err != nil {
-			if shortcutKind == shortcutWrapper {
-				return exitError(ExitCodeActionFailed, fmt.Errorf("wrapper output is not valid JSON: %w", err))
-			}
 			payload = map[string]any{
 				"raw":      strings.TrimSpace(string(out)),
 				"format":   "text",
@@ -130,16 +111,9 @@ func runActionCommand(ctx context.Context, def discovery.ActionDef, cmdOpts *act
 	return err
 }
 
-func shortcutRunOptions(kind shortcutKind) shortcuts.RunOptions {
-	if kind == shortcutWrapper {
-		return shortcuts.RunOptions{OutputType: "public.json"}
-	}
-	return shortcuts.RunOptions{}
-}
-
-func resolveActionShortcut(ctx context.Context, def discovery.ActionDef, cmdOpts *actionCmdOptions, cfg config.Config) (string, shortcutKind, error) {
+func resolveActionShortcut(ctx context.Context, def discovery.ActionDef, cmdOpts *actionCmdOptions) (string, error) {
 	if cmdOpts.shortcut != "" {
-		return cmdOpts.shortcut, shortcutExplicit, nil
+		return cmdOpts.shortcut, nil
 	}
 
 	taskForShortcut := cmdOpts.task
@@ -150,36 +124,16 @@ func resolveActionShortcut(ctx context.Context, def discovery.ActionDef, cmdOpts
 	}
 	name, candidates, err := resolveDirectShortcut(ctx, def, taskForShortcut)
 	if err != nil {
-		return "", shortcutDirect, err
+		return "", err
 	}
 	if name != "" {
-		return name, shortcutDirect, nil
-	}
-
-	wrapperName := cfg.Wrappers[def.ID]
-	if wrapperName == "" {
-		wrapperName = config.WrapperName(cfg.WrapperPrefix, def.ID)
-	}
-	wrapperExists, err := shortcutExists(ctx, wrapperName)
-	if err != nil {
-		return "", shortcutWrapper, err
-	}
-	if !wrapperExists && cfg.WrapperPrefix == config.DefaultWrapperPrefix {
-		legacy := config.WrapperName(config.LegacyWrapperPrefix, def.ID)
-		legacyExists, legacyErr := shortcutExists(ctx, legacy)
-		if legacyErr == nil && legacyExists {
-			wrapperName = legacy
-			wrapperExists = true
-		}
-	}
-	if wrapperExists {
-		return wrapperName, shortcutWrapper, nil
+		return name, nil
 	}
 
 	if len(candidates) > 0 {
-		return "", shortcutWrapper, exitError(ExitCodeWrappersMissing, fmt.Errorf("no matching Streaks shortcut found; expected one of: %s", strings.Join(candidates, ", ")))
+		return "", exitError(ExitCodeShortcutMissing, fmt.Errorf("no matching Streaks shortcut found for action %s; expected one of: %s", def.ID, strings.Join(candidates, ", ")))
 	}
-	return "", shortcutWrapper, exitError(ExitCodeWrappersMissing, fmt.Errorf("wrapper shortcut not found: %s", wrapperName))
+	return "", exitError(ExitCodeShortcutMissing, fmt.Errorf("no matching Streaks shortcut found for action %s; create a Streaks shortcut or use --shortcut", def.ID))
 }
 
 func resolveDirectShortcut(ctx context.Context, def discovery.ActionDef, task string) (string, []string, error) {
@@ -197,27 +151,6 @@ func resolveDirectShortcut(ctx context.Context, def discovery.ActionDef, task st
 	}
 	name := matchShortcutName(available, candidates)
 	return name, candidates, nil
-}
-
-func matchShortcutName(shortcuts []shortcuts.Shortcut, candidates []string) string {
-	if len(shortcuts) == 0 || len(candidates) == 0 {
-		return ""
-	}
-	exact := make(map[string]string, len(shortcuts))
-	normalized := make(map[string]string, len(shortcuts))
-	for _, sc := range shortcuts {
-		exact[sc.Name] = sc.Name
-		normalized[strings.ToLower(strings.TrimSpace(sc.Name))] = sc.Name
-	}
-	for _, cand := range candidates {
-		if name, ok := exact[cand]; ok {
-			return name
-		}
-		if name, ok := normalized[strings.ToLower(strings.TrimSpace(cand))]; ok {
-			return name
-		}
-	}
-	return ""
 }
 
 func buildActionInput(def discovery.ActionDef, cmdOpts *actionCmdOptions) ([]byte, error) {
@@ -269,10 +202,10 @@ func taskFromInput(raw string) string {
 	return ""
 }
 
-func printDryRun(opts *rootOptions, wrapper string, input []byte) error {
+func printDryRun(opts *rootOptions, shortcut string, input []byte) error {
 	payload := map[string]any{
-		"dry_run": true,
-		"wrapper": wrapper,
+		"dry_run":  true,
+		"shortcut": shortcut,
 	}
 	if input != nil {
 		payload["input"] = json.RawMessage(input)
@@ -286,9 +219,9 @@ func printDryRun(opts *rootOptions, wrapper string, input []byte) error {
 		}
 	}
 	if input != nil {
-		fmt.Fprintf(os.Stdout, "Dry run: %s %s\n", wrapper, string(input))
+		fmt.Fprintf(os.Stdout, "Dry run: %s %s\n", shortcut, string(input))
 		return nil
 	}
-	fmt.Fprintf(os.Stdout, "Dry run: %s\n", wrapper)
+	fmt.Fprintf(os.Stdout, "Dry run: %s\n", shortcut)
 	return nil
 }

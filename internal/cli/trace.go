@@ -8,7 +8,7 @@ import (
 
 type traceEntry struct {
 	Timestamp string          `json:"timestamp"`
-	Wrapper   string          `json:"wrapper"`
+	Shortcut  string          `json:"shortcut"`
 	Input     json.RawMessage `json:"input,omitempty"`
 	Output    json.RawMessage `json:"output,omitempty"`
 	Error     string          `json:"error,omitempty"`

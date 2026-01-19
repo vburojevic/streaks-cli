@@ -8,7 +8,7 @@ Use `--output json` or `--agent` to enable JSON output.
 - `2` invalid usage
 - `10` Streaks app not found
 - `11` Shortcuts CLI missing or failed
-- `12` wrapper shortcuts missing
+- `12` Streaks shortcut missing
 - `13` action execution failed
 
 All JSON outputs are UTF-8 and printed to stdout. Errors are printed to stderr as:
@@ -47,10 +47,9 @@ All JSON outputs are UTF-8 and printed to stdout. Errors are printed to stderr a
   "version": "...",
   "shortcuts_cli": true,
   "shortcuts_cli_path": "/usr/bin/shortcuts",
-  "config_path": "~/.config/streaks-cli/config.json",
-  "config_present": true,
-  "wrapper_shortcuts": ["st task-complete"],
-  "missing_wrappers": [],
+  "shortcut_count": 12,
+  "shortcut_actions_available": ["task-list"],
+  "shortcut_actions_missing": [],
   "url_schemes": ["streaks"],
   "warnings": []
 }
@@ -60,28 +59,10 @@ All JSON outputs are UTF-8 and printed to stdout. Errors are printed to stderr a
 
 ```json
 {
-  "config_path": "~/.config/streaks-cli/config.json",
-  "checklist_path": "wrappers-checklist.txt",
-  "missing_wrappers": ["st task-complete"]
+  "shortcut_actions_available": ["task-list"],
+  "shortcut_actions_missing": ["pause"],
+  "note": "The CLI uses existing Streaks shortcuts..."
 }
-```
-
-## `st wrappers list`
-
-```json
-[{"id":"task-complete","title":"...","wrapper":"st task-complete","requires_task":true,"parameters":{}}]
-```
-
-## `st wrappers verify`
-
-```json
-[{"id":"task-complete","wrapper":"st task-complete","exists":true,"output_valid":true,"skipped":false,"error":""}]
-```
-
-## `st wrappers doctor`
-
-```json
-{"config_path":"...","missing_wrappers":[],"verify_results":[...]}
 ```
 
 ## `st actions list`
@@ -93,12 +74,12 @@ All JSON outputs are UTF-8 and printed to stdout. Errors are printed to stderr a
 ## `st actions describe`
 
 ```json
-{"action":{"id":"...","title":"...","transport":"shortcuts","requires_task":true,"parameters":{}},"wrapper":"st task-complete","sample_input":{"task":"<task>"},"shortcut_candidates":["All Tasks"]}
+{"action":{"id":"...","title":"...","transport":"shortcuts","requires_task":true,"parameters":{}},"sample_input":{"task":"<task>"},"shortcut_candidates":["Complete ${task} in Streaks"]}
 ```
 
 ## Action commands (`st <action>`)
 
-Wrapper output is passed through as JSON. If a direct shortcut returns non-JSON,
+Shortcut output is passed through as JSON. If a shortcut returns non-JSON,
 `--output json` wraps it as:
 
 ```json
@@ -108,5 +89,5 @@ Wrapper output is passed through as JSON. If a direct shortcut returns non-JSON,
 For `--dry-run`, output is:
 
 ```json
-{"dry_run":true,"wrapper":"st task-complete","input":{"task":"Example"}}
+{"dry_run":true,"shortcut":"Complete Example in Streaks","input":{"task":"Example"}}
 ```

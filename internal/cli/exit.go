@@ -6,7 +6,7 @@ const (
 	ExitCodeUsage            = 2
 	ExitCodeAppMissing       = 10
 	ExitCodeShortcutsMissing = 11
-	ExitCodeWrappersMissing  = 12
+	ExitCodeShortcutMissing  = 12
 	ExitCodeActionFailed     = 13
 )
 

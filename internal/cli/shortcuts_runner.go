@@ -9,9 +9,9 @@ import (
 	"streaks-cli/internal/shortcuts"
 )
 
-func runShortcutWithRetry(ctx context.Context, name string, input []byte, opts *rootOptions, runOpts shortcuts.RunOptions) ([]byte, error) {
+func runShortcutWithRetry(ctx context.Context, name string, input []byte, opts *rootOptions) ([]byte, error) {
 	if opts == nil {
-		return runShortcut(ctx, name, input, runOpts)
+		return runShortcut(ctx, name, input, shortcuts.RunOptions{})
 	}
 	attempts := opts.retries + 1
 	wait := opts.retryWait
@@ -20,7 +20,7 @@ func runShortcutWithRetry(ctx context.Context, name string, input []byte, opts *
 	}
 	var lastErr error
 	for attempt := 1; attempt <= attempts; attempt++ {
-		out, err := runShortcut(ctx, name, input, runOpts)
+		out, err := runShortcut(ctx, name, input, shortcuts.RunOptions{})
 		if err == nil {
 			return out, nil
 		}

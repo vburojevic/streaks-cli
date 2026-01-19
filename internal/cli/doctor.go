@@ -5,35 +5,32 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"sort"
 
 	"github.com/spf13/cobra"
 
-	"streaks-cli/internal/config"
 	"streaks-cli/internal/discovery"
 	"streaks-cli/internal/output"
 	"streaks-cli/internal/shortcuts"
 )
 
 type doctorReport struct {
-	AppInstalled     bool     `json:"app_installed"`
-	AppPath          string   `json:"app_path,omitempty"`
-	BundleID         string   `json:"bundle_id,omitempty"`
-	Version          string   `json:"version,omitempty"`
-	ShortcutsCLI     bool     `json:"shortcuts_cli"`
-	ShortcutsCLIPath string   `json:"shortcuts_cli_path,omitempty"`
-	ConfigPath       string   `json:"config_path,omitempty"`
-	ConfigPresent    bool     `json:"config_present"`
-	WrapperShortcuts []string `json:"wrapper_shortcuts"`
-	MissingWrappers  []string `json:"missing_wrappers"`
-	URLSchemes       []string `json:"url_schemes,omitempty"`
-	Warnings         []string `json:"warnings,omitempty"`
+	AppInstalled             bool     `json:"app_installed"`
+	AppPath                  string   `json:"app_path,omitempty"`
+	BundleID                 string   `json:"bundle_id,omitempty"`
+	Version                  string   `json:"version,omitempty"`
+	ShortcutsCLI             bool     `json:"shortcuts_cli"`
+	ShortcutsCLIPath         string   `json:"shortcuts_cli_path,omitempty"`
+	ShortcutCount            int      `json:"shortcut_count,omitempty"`
+	ShortcutActionsAvailable []string `json:"shortcut_actions_available,omitempty"`
+	ShortcutActionsMissing   []string `json:"shortcut_actions_missing,omitempty"`
+	URLSchemes               []string `json:"url_schemes,omitempty"`
+	Warnings                 []string `json:"warnings,omitempty"`
 }
 
 func newDoctorCmd(opts *rootOptions) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "doctor",
-		Short: "Verify Streaks installation and automation setup",
+		Short: "Verify Streaks installation and Shortcuts availability",
 		RunE: func(_ *cobra.Command, _ []string) error {
 			report, err := runDoctor(context.Background())
 			if err != nil {
@@ -65,19 +62,14 @@ func newDoctorCmd(opts *rootOptions) *cobra.Command {
 
 func runDoctor(ctx context.Context) (doctorReport, error) {
 	report := doctorReport{}
-	defActions := discovery.DefaultActionDefinitions()
-	cfg, present, _ := config.Load(defActions)
-	configPath, _ := config.Path()
-	report.ConfigPath = configPath
-	report.ConfigPresent = present
 
 	if _, err := os.Stat("/usr/bin/shortcuts"); err == nil {
 		report.ShortcutsCLI = true
 		report.ShortcutsCLIPath = "/usr/bin/shortcuts"
 	}
 
-	disc, err := discovery.Discover(ctx)
-	if err == nil {
+	disc, discErr := discovery.Discover(ctx)
+	if discErr == nil {
 		report.AppInstalled = true
 		report.AppPath = disc.App.Path
 		report.BundleID = disc.App.BundleID
@@ -88,30 +80,20 @@ func runDoctor(ctx context.Context) (doctorReport, error) {
 		}
 		report.URLSchemes = disc.URLSchemes
 	} else {
-		report.Warnings = append(report.Warnings, err.Error())
+		report.Warnings = append(report.Warnings, discErr.Error())
 	}
 
 	if report.ShortcutsCLI {
-		shortcutsList, err := shortcuts.List(ctx)
-		if err == nil {
-			installed := make(map[string]struct{}, len(shortcutsList))
-			for _, sc := range shortcutsList {
-				installed[sc.Name] = struct{}{}
-			}
-			wrappers := make([]string, 0, len(cfg.Wrappers))
-			missing := make([]string, 0)
-			for _, name := range cfg.Wrappers {
-				wrappers = append(wrappers, name)
-				if _, ok := installed[name]; !ok {
-					missing = append(missing, name)
-				}
-			}
-			sort.Strings(wrappers)
-			sort.Strings(missing)
-			report.WrapperShortcuts = wrappers
-			report.MissingWrappers = missing
-		} else {
+		list, err := shortcuts.List(ctx)
+		if err != nil {
 			report.Warnings = append(report.Warnings, err.Error())
+			return report, nil
+		}
+		report.ShortcutCount = len(list)
+		if discErr == nil {
+			available, missing := shortcutCoverage(discovery.DefaultActionDefinitions(), disc, list)
+			report.ShortcutActionsAvailable = available
+			report.ShortcutActionsMissing = missing
 		}
 	}
 
@@ -125,8 +107,8 @@ func doctorExitError(report doctorReport) error {
 	if !report.ShortcutsCLI {
 		return exitError(ExitCodeShortcutsMissing, errors.New("shortcuts CLI not available"))
 	}
-	if len(report.MissingWrappers) > 0 {
-		return exitError(ExitCodeWrappersMissing, fmt.Errorf("missing %d wrapper shortcuts", len(report.MissingWrappers)))
+	if len(report.ShortcutActionsMissing) > 0 {
+		return exitError(ExitCodeShortcutMissing, fmt.Errorf("missing %d Streaks shortcuts", len(report.ShortcutActionsMissing)))
 	}
 	return nil
 }
@@ -144,17 +126,12 @@ func printDoctor(report doctorReport) {
 	} else {
 		fmt.Println("Shortcuts CLI: MISSING")
 	}
-	if report.ConfigPresent {
-		fmt.Printf("Config: OK (%s)\n", report.ConfigPath)
+	if len(report.ShortcutActionsMissing) == 0 {
+		fmt.Println("Streaks shortcuts: OK")
 	} else {
-		fmt.Printf("Config: MISSING (%s)\n", report.ConfigPath)
-	}
-	if len(report.MissingWrappers) == 0 {
-		fmt.Println("Wrapper shortcuts: OK")
-	} else {
-		fmt.Printf("Wrapper shortcuts: missing %d\n", len(report.MissingWrappers))
-		for _, name := range report.MissingWrappers {
-			fmt.Printf("  - %s\n", name)
+		fmt.Printf("Streaks shortcuts: missing %d\n", len(report.ShortcutActionsMissing))
+		for _, action := range report.ShortcutActionsMissing {
+			fmt.Printf("  - %s\n", action)
 		}
 	}
 	if len(report.Warnings) > 0 {
@@ -174,13 +151,12 @@ func printDoctorPlain(report doctorReport) {
 	}
 	fmt.Printf("app\t%s\t%s\n", status(report.AppInstalled), report.AppPath)
 	fmt.Printf("shortcuts\t%s\t%s\n", status(report.ShortcutsCLI), report.ShortcutsCLIPath)
-	fmt.Printf("config\t%s\t%s\n", status(report.ConfigPresent), report.ConfigPath)
-	if len(report.MissingWrappers) == 0 {
-		fmt.Printf("wrappers\tok\t0\n")
+	if len(report.ShortcutActionsMissing) == 0 {
+		fmt.Printf("actions\tok\t0\n")
 	} else {
-		fmt.Printf("wrappers\tmissing\t%d\n", len(report.MissingWrappers))
-		for _, name := range report.MissingWrappers {
-			fmt.Printf("wrapper-missing\t%s\n", name)
+		fmt.Printf("actions\tmissing\t%d\n", len(report.ShortcutActionsMissing))
+		for _, action := range report.ShortcutActionsMissing {
+			fmt.Printf("action-missing\t%s\n", action)
 		}
 	}
 	for _, warning := range report.Warnings {

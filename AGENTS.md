@@ -5,10 +5,9 @@
 - `internal/cli/`: Cobra commands and exit-code handling.
 - `internal/discovery/`: App bundle discovery (Info.plist + Localizable.strings).
 - `internal/shortcuts/`: Shortcuts CLI integration.
-- `internal/config/`: Config read/write (`~/.config/streaks-cli/config.json`).
 - `internal/output/`: JSON helpers.
 - `internal/xcallback/`: Stub for future x-callback URL support.
-- `docs/`: `setup.md`, `wrappers.md`, `release.md`, `faq.md`, `schema.md`.
+- `docs/`: `setup.md`, `release.md`, `faq.md`, `schema.md`.
 - `.github/workflows/`: CI workflows.
 
 ## Build, Test, and Development Commands
@@ -32,15 +31,14 @@
 ## Commit & Pull Request Guidelines
 - Use Conventional Commits (e.g., `feat:`, `chore:`, `test:`).
 - PRs should include summary + test results.
-- If discovery mappings change, update `docs/setup.md` and `docs/wrappers.md`.
+- If discovery mappings change, update `docs/setup.md`.
 
 ## Security & Configuration Notes
 - Do not read sandboxed databases or reverse engineer binaries.
 - Automation uses official surfaces only (Shortcuts, URL scheme).
-- Config path: `~/.config/streaks-cli/config.json` (`STREAKS_CLI_CONFIG` override).
 - Agent mode: `--agent` or `STREAKS_CLI_AGENT=1` for JSON output.
 - Output modes: `--output human|json|plain`.
-- Action execution prefers existing Streaks shortcuts; wrappers are fallback for guaranteed JSON.
+- Action execution requires existing Streaks shortcuts; use `--shortcut` to target one.
 
 ## Release Workflow
 - Tag `vX.Y.Z`, push the tag.

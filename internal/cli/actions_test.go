@@ -8,7 +8,6 @@ import (
 	"os"
 	"testing"
 
-	"streaks-cli/internal/config"
 	"streaks-cli/internal/discovery"
 	"streaks-cli/internal/shortcuts"
 )
@@ -53,41 +52,27 @@ func TestBuildActionInputFromStdin(t *testing.T) {
 	}
 }
 
-func TestRunActionCommandUsesWrapper(t *testing.T) {
+func TestRunActionCommandUsesExplicitShortcut(t *testing.T) {
 	origRun := runShortcut
-	origLoad := loadConfig
-	origExists := shortcutExists
 	origDiscover := discover
 	origList := listShortcuts
 	defer func() {
 		runShortcut = origRun
-		loadConfig = origLoad
-		shortcutExists = origExists
 		discover = origDiscover
 		listShortcuts = origList
 	}()
 
-	called := struct {
-		name  string
-		input []byte
-	}{}
+	called := ""
 
 	runShortcut = func(_ context.Context, name string, input []byte, _ shortcuts.RunOptions) ([]byte, error) {
-		called.name = name
-		called.input = input
+		called = name
 		return []byte(`{"ok":true}`), nil
-	}
-	shortcutExists = func(_ context.Context, _ string) (bool, error) {
-		return true, nil
 	}
 	discover = func(_ context.Context) (discovery.Discovery, error) {
 		return discovery.Discovery{}, nil
 	}
 	listShortcuts = func(_ context.Context) ([]shortcuts.Shortcut, error) {
 		return nil, nil
-	}
-	loadConfig = func(_ []discovery.ActionDef) (config.Config, bool, error) {
-		return config.Config{WrapperPrefix: "streaks-cli", Wrappers: map[string]string{"task-list": "wrapper"}}, true, nil
 	}
 
 	opts := &rootOptions{json: true, pretty: false}
@@ -97,7 +82,7 @@ func TestRunActionCommandUsesWrapper(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stdout = w
 
-	err := runActionCommand(context.Background(), def, &actionCmdOptions{}, opts)
+	err := runActionCommand(context.Background(), def, &actionCmdOptions{shortcut: "My Shortcut"}, opts)
 	_ = w.Close()
 	os.Stdout = origStdout
 
@@ -107,24 +92,20 @@ func TestRunActionCommandUsesWrapper(t *testing.T) {
 	if err != nil {
 		t.Fatalf("runActionCommand: %v", err)
 	}
-	if called.name != "wrapper" {
-		t.Fatalf("expected wrapper name, got %s", called.name)
+	if called != "My Shortcut" {
+		t.Fatalf("expected shortcut name, got %s", called)
 	}
 	if !bytes.Contains(out, []byte("ok")) {
 		t.Fatalf("unexpected output: %s", string(out))
 	}
 }
 
-func TestRunActionCommandUsesDirectShortcutWhenWrapperMissing(t *testing.T) {
+func TestRunActionCommandUsesDirectShortcut(t *testing.T) {
 	origRun := runShortcut
-	origLoad := loadConfig
-	origExists := shortcutExists
 	origDiscover := discover
 	origList := listShortcuts
 	defer func() {
 		runShortcut = origRun
-		loadConfig = origLoad
-		shortcutExists = origExists
 		discover = origDiscover
 		listShortcuts = origList
 	}()
@@ -134,12 +115,6 @@ func TestRunActionCommandUsesDirectShortcutWhenWrapperMissing(t *testing.T) {
 			t.Fatalf("expected direct shortcut name, got %s", name)
 		}
 		return []byte(`{"ok":true}`), nil
-	}
-	shortcutExists = func(_ context.Context, _ string) (bool, error) {
-		return false, nil
-	}
-	loadConfig = func(_ []discovery.ActionDef) (config.Config, bool, error) {
-		return config.Config{WrapperPrefix: "st", Wrappers: map[string]string{}}, true, nil
 	}
 	discover = func(_ context.Context) (discovery.Discovery, error) {
 		return discovery.Discovery{

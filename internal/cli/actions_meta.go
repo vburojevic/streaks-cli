@@ -9,7 +9,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"streaks-cli/internal/config"
 	"streaks-cli/internal/discovery"
 	"streaks-cli/internal/output"
 )
@@ -24,7 +23,6 @@ type actionInfo struct {
 
 type actionDetail struct {
 	Action             actionInfo     `json:"action"`
-	Wrapper            string         `json:"wrapper"`
 	Sample             map[string]any `json:"sample_input"`
 	ShortcutCandidates []string       `json:"shortcut_candidates,omitempty"`
 }
@@ -94,14 +92,6 @@ func newActionsDescribeCmd(opts *rootOptions) *cobra.Command {
 			if err != nil {
 				return exitError(ExitCodeUsage, err)
 			}
-			cfg, _, err := config.Load(discovery.DefaultActionDefinitions())
-			if err != nil {
-				return err
-			}
-			wrapper := cfg.Wrappers[def.ID]
-			if wrapper == "" {
-				wrapper = config.WrapperName(cfg.WrapperPrefix, def.ID)
-			}
 			var shortcutCandidates []string
 			if disc, err := discover(context.Background()); err == nil {
 				shortcutCandidates = discovery.ActionShortcutCandidates(def, disc.App, disc.AppIntentKeys, disc.AppShortcutPhrases, task)
@@ -114,7 +104,6 @@ func newActionsDescribeCmd(opts *rootOptions) *cobra.Command {
 					RequiresTask: def.RequiresTask,
 					Parameters:   def.ParamOptions,
 				},
-				Wrapper:            wrapper,
 				Sample:             samplePayload(def),
 				ShortcutCandidates: shortcutCandidates,
 			}
@@ -127,7 +116,7 @@ func newActionsDescribeCmd(opts *rootOptions) *cobra.Command {
 			if opts.isPlain() {
 				return output.PrintJSON(os.Stdout, detail, false)
 			}
-			fmt.Printf("ID: %s\nTitle: %s\nWrapper: %s\n", detail.Action.ID, detail.Action.Title, detail.Wrapper)
+			fmt.Printf("ID: %s\nTitle: %s\n", detail.Action.ID, detail.Action.Title)
 			if len(detail.Sample) > 0 {
 				fmt.Printf("Sample input: %v\n", detail.Sample)
 			}

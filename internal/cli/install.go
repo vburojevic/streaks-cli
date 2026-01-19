@@ -2,135 +2,96 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
-	"sort"
 
 	"github.com/spf13/cobra"
 
-	"streaks-cli/internal/config"
 	"streaks-cli/internal/discovery"
 	"streaks-cli/internal/output"
 	"streaks-cli/internal/shortcuts"
 )
 
+type installResult struct {
+	ShortcutActionsAvailable []string `json:"shortcut_actions_available,omitempty"`
+	ShortcutActionsMissing   []string `json:"shortcut_actions_missing,omitempty"`
+	Note                     string   `json:"note,omitempty"`
+}
+
 func newInstallCmd(opts *rootOptions) *cobra.Command {
-	var force bool
-	var checklistPath string
 	cmd := &cobra.Command{
 		Use:   "install",
-		Short: "Install or verify wrapper shortcuts and config",
+		Short: "Verify Streaks shortcuts are ready to use",
 		RunE: func(_ *cobra.Command, _ []string) error {
-			defs := discovery.DefaultActionDefinitions()
-			cfg := config.DefaultConfig(defs)
-			path, err := config.Write(cfg, force)
+			result, err := runInstall(context.Background())
 			if err != nil {
 				return err
 			}
-
-			if checklistPath != "" {
-				entries, err := listWrappers()
-				if err != nil {
-					return err
-				}
-				if err := writeChecklist(checklistPath, entries); err != nil {
-					return err
-				}
-			}
-
-			missing, err := missingWrappers(context.Background(), cfg.Wrappers)
-			if err != nil {
-				return exitError(ExitCodeShortcutsMissing, err)
-			}
-
-			result := installResult{
-				ConfigPath:    path,
-				ChecklistPath: checklistPath,
-				Missing:       missing,
-			}
-
 			if opts.isJSON() {
 				if err := output.PrintJSON(os.Stdout, result, opts.pretty); err != nil {
 					return err
 				}
-				if len(missing) > 0 {
-					return exitError(ExitCodeWrappersMissing, fmt.Errorf("missing %d wrapper shortcuts", len(missing)))
-				}
-				return nil
+				return installExitError(result)
 			}
 			if opts.noOutput {
-				if len(missing) > 0 {
-					return exitError(ExitCodeWrappersMissing, fmt.Errorf("missing %d wrapper shortcuts", len(missing)))
-				}
-				return nil
+				return installExitError(result)
 			}
-
 			if opts.isPlain() {
-				if !opts.quiet {
-					fmt.Printf("config\t%s\n", path)
-					if checklistPath != "" {
-						fmt.Printf("checklist\t%s\n", checklistPath)
-					}
+				for _, action := range result.ShortcutActionsAvailable {
+					fmt.Printf("action\tavailable\t%s\n", action)
 				}
-				if len(missing) > 0 {
-					fmt.Printf("wrappers\tmissing\t%d\n", len(missing))
-					for _, name := range missing {
-						fmt.Printf("wrapper-missing\t%s\n", name)
-					}
-					return exitError(ExitCodeWrappersMissing, fmt.Errorf("missing %d wrapper shortcuts", len(missing)))
+				for _, action := range result.ShortcutActionsMissing {
+					fmt.Printf("action\tmissing\t%s\n", action)
 				}
-				if !opts.quiet {
-					fmt.Println("wrappers\tok\t0")
+				if result.Note != "" {
+					fmt.Printf("note\t%s\n", result.Note)
 				}
-				return nil
+				return installExitError(result)
 			}
-
-			if !opts.quiet {
-				fmt.Printf("Config written: %s\n", path)
-				if checklistPath != "" {
-					fmt.Printf("Checklist written: %s\n", checklistPath)
+			fmt.Println("Streaks shortcut readiness")
+			if len(result.ShortcutActionsMissing) == 0 {
+				fmt.Println("All non-task actions have matching shortcuts.")
+			} else {
+				fmt.Printf("Missing %d shortcuts for non-task actions:\n", len(result.ShortcutActionsMissing))
+				for _, action := range result.ShortcutActionsMissing {
+					fmt.Printf("  - %s\n", action)
 				}
+				fmt.Println("Create matching shortcuts in the Shortcuts app.")
 			}
-			if len(missing) > 0 {
-				fmt.Printf("Missing %d wrapper shortcuts.\n", len(missing))
-				for _, name := range missing {
-					fmt.Printf("  - %s\n", name)
-				}
-				fmt.Println("See docs/setup.md for manual wrapper setup.")
-				return exitError(ExitCodeWrappersMissing, fmt.Errorf("missing %d wrapper shortcuts", len(missing)))
+			if result.Note != "" {
+				fmt.Printf("Note: %s\n", result.Note)
 			}
-			if !opts.quiet {
-				fmt.Println("Wrapper shortcuts: OK")
-			}
-			return nil
+			return installExitError(result)
 		},
 	}
-	cmd.Flags().BoolVar(&force, "force", false, "Overwrite existing config")
-	cmd.Flags().StringVar(&checklistPath, "checklist", "", "Write a wrapper checklist to a file")
 	return cmd
 }
 
-type installResult struct {
-	ConfigPath    string   `json:"config_path"`
-	ChecklistPath string   `json:"checklist_path,omitempty"`
-	Missing       []string `json:"missing_wrappers"`
-}
-
-func missingWrappers(ctx context.Context, wrappers map[string]string) ([]string, error) {
+func runInstall(ctx context.Context) (installResult, error) {
+	note := "The CLI uses existing Streaks shortcuts. Create shortcuts for the actions you need or pass --shortcut."
+	disc, err := discovery.Discover(ctx)
+	if err != nil {
+		return installResult{}, exitError(ExitCodeAppMissing, err)
+	}
+	if _, err := os.Stat(disc.ShortcutsCLIPath); err != nil {
+		return installResult{}, exitError(ExitCodeShortcutsMissing, errors.New("shortcuts CLI not available"))
+	}
 	list, err := shortcuts.List(ctx)
 	if err != nil {
-		return nil, err
+		return installResult{}, exitError(ExitCodeShortcutsMissing, err)
 	}
-	installed := make(map[string]struct{}, len(list))
-	for _, sc := range list {
-		installed[sc.Name] = struct{}{}
+	available, missing := shortcutCoverage(discovery.DefaultActionDefinitions(), disc, list)
+	return installResult{
+		ShortcutActionsAvailable: available,
+		ShortcutActionsMissing:   missing,
+		Note:                     note,
+	}, nil
+}
+
+func installExitError(result installResult) error {
+	if len(result.ShortcutActionsMissing) > 0 {
+		return exitError(ExitCodeShortcutMissing, fmt.Errorf("missing %d Streaks shortcuts", len(result.ShortcutActionsMissing)))
 	}
-	missing := make([]string, 0)
-	for _, name := range wrappers {
-		if _, ok := installed[name]; !ok {
-			missing = append(missing, name)
-		}
-	}
-	sort.Strings(missing)
-	return missing, nil
+	return nil
 }

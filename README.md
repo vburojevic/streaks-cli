@@ -30,8 +30,8 @@ st open
 ```
 
 If you already have Streaks shortcuts in your library, `st <action>` will use
-them automatically. For guaranteed JSON output, create wrapper shortcuts
-(`docs/wrappers.md`) and run `st install`.
+them automatically. If not, create Streaks shortcuts in the Shortcuts app and
+re-run `st doctor`.
 
 ## Testing
 
@@ -53,9 +53,9 @@ st task-list --shortcut "All Tasks"
 st --agent discover
 
 # Plain output for scripts
-st --output plain wrappers list
+st --output plain actions list
 
-# Dry-run to see wrapper payload
+# Dry-run to see shortcut payload
 st task-complete --task "Read" --dry-run
 ```
 
@@ -82,14 +82,9 @@ Use `--agent` or `STREAKS_CLI_AGENT=1` for deterministic JSON output:
 
 ```
 st --agent doctor
-st --agent wrappers list
+st --agent actions list
 st --agent actions list
 ```
-
-## Config
-
-Config is stored at `~/.config/streaks-cli/config.json`.
-Override via `STREAKS_CLI_CONFIG` or `--config`.
 
 ## Command reference
 
@@ -99,7 +94,6 @@ Override via `STREAKS_CLI_CONFIG` or `--config`.
 ## Docs
 
 - `docs/setup.md` – discovery + setup
-- `docs/wrappers.md` – wrapper creation, verify/doctor
 - `docs/faq.md` – troubleshooting
 - `docs/release.md` – release workflow
 

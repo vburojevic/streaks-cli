@@ -22,7 +22,9 @@ func ActionShortcutCandidates(def ActionDef, app AppInfo, intentKeys []AppIntent
 	intentNames := actionIntentNames(def)
 
 	templates := make([]string, 0, len(def.Keys)+len(shortcutPhrases)+1)
-	templates = append(templates, def.Title)
+	if def.Title != "" && shouldUseTitleTemplate(def) {
+		templates = append(templates, def.Title)
+	}
 	for _, key := range def.Keys {
 		if value, ok := intentValues[key]; ok {
 			templates = append(templates, value)
@@ -56,6 +58,13 @@ func ActionShortcutCandidates(def ActionDef, app AppInfo, intentKeys []AppIntent
 		candidates = append(candidates, out)
 	}
 	return candidates
+}
+
+func shouldUseTitleTemplate(def ActionDef) bool {
+	if !def.RequiresTask {
+		return true
+	}
+	return strings.Contains(def.Title, "${task}") || strings.Contains(def.Title, "%@")
 }
 
 func actionIntentNames(def ActionDef) []string {

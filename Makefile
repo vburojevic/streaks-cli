@@ -23,4 +23,3 @@ smoke: build
 	$(BIN) --help >/dev/null
 	$(BIN) --agent discover >/dev/null
 	$(BIN) --output plain actions list >/dev/null
-	$(BIN) --output plain wrappers list >/dev/null

@@ -8,7 +8,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"streaks-cli/internal/config"
 	"streaks-cli/internal/discovery"
 	"streaks-cli/internal/output"
 )
@@ -18,7 +17,6 @@ var version = "dev"
 type rootOptions struct {
 	json      bool
 	pretty    bool
-	config    string
 	agent     bool
 	output    string
 	plain     bool
@@ -45,11 +43,6 @@ func newRootCmd() *cobra.Command {
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
-			if opts.config != "" {
-				if err := os.Setenv(config.EnvConfigPath, opts.config); err != nil {
-					return err
-				}
-			}
 			if opts.output == "" {
 				if env := os.Getenv(envOutputMode); env != "" {
 					opts.output = env
@@ -89,13 +82,11 @@ func newRootCmd() *cobra.Command {
 	cmd.PersistentFlags().DurationVar(&opts.timeout, "timeout", 30*time.Second, "Timeout for Shortcuts runs")
 	cmd.PersistentFlags().IntVar(&opts.retries, "retries", 0, "Retry failed Shortcuts runs")
 	cmd.PersistentFlags().DurationVar(&opts.retryWait, "retry-delay", time.Second, "Initial delay between retries")
-	cmd.PersistentFlags().StringVar(&opts.config, "config", "", "Path to config file (overrides STREAKS_CLI_CONFIG)")
 
 	cmd.AddCommand(newDiscoverCmd(opts))
 	cmd.AddCommand(newDoctorCmd(opts))
 	cmd.AddCommand(newInstallCmd(opts))
 	cmd.AddCommand(newOpenCmd(opts))
-	cmd.AddCommand(newWrappersCmd(opts))
 	cmd.AddCommand(newActionsCmd(opts))
 
 	addActionCommands(cmd, availableActionDefs(), opts)
