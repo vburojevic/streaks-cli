@@ -41,6 +41,20 @@ Run `streaks-cli --help` to see all action commands.
 Config is stored at `~/.config/streaks-cli/config.json`.
 Override via `STREAKS_CLI_CONFIG` or `--config`.
 
+## AI Agent Usage
+
+Use structured output for agents:
+
+```
+streaks-cli --agent discover
+streaks-cli --agent doctor
+streaks-cli --agent wrappers list
+```
+
+`--agent` implies `--json` and disables pretty formatting for stable parsing.
+On failures, the CLI returns JSON errors to stderr (e.g. `{"error":"...","code":10}`).
+You can also set `STREAKS_CLI_AGENT=1`.
+
 ## Docs
 
 See `docs/setup.md` for discovery details and wrapper shortcut setup.

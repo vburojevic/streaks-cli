@@ -20,3 +20,7 @@
 ## Homebrew install issues
 - Ensure the tap is added: `brew tap vburojevic/tap`.
 - Update: `brew update` then `brew upgrade streaks-cli`.
+
+## Agent output parsing
+- Use `--agent` or `--json` for machine-readable output.
+- Error responses are JSON when `--agent` is enabled.

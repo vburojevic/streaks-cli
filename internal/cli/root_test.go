@@ -10,6 +10,10 @@ func TestNewRootCmdIncludesCommands(t *testing.T) {
 	defer os.Unsetenv(envDisableDiscovery)
 
 	cmd := newRootCmd()
+	cmd.SetArgs([]string{"--agent", "--help"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("help failed: %v", err)
+	}
 	seen := map[string]bool{}
 	for _, sub := range cmd.Commands() {
 		seen[sub.Name()] = true

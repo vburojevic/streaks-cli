@@ -38,6 +38,7 @@
 - Do not read sandboxed databases or reverse engineer binaries.
 - Automation uses official surfaces only (Shortcuts, URL scheme).
 - Config path: `~/.config/streaks-cli/config.json` (`STREAKS_CLI_CONFIG` override).
+- Agent mode: `--agent` or `STREAKS_CLI_AGENT=1` for JSON output.
 
 ## Release Workflow
 - Tag `vX.Y.Z`, push the tag.
