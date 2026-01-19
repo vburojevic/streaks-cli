@@ -60,60 +60,12 @@ func addActionCommands(root *cobra.Command, defs []discovery.ActionDef, opts *ro
 }
 
 func runActionCommand(ctx context.Context, def discovery.ActionDef, cmdOpts *actionCmdOptions, opts *rootOptions) error {
-	shortcutName, err := resolveActionShortcut(ctx, def, cmdOpts)
-	if err != nil {
-		return err
-	}
 	input, err := buildActionInput(def, cmdOpts)
 	if err != nil {
 		return exitError(ExitCodeUsage, err)
 	}
-	if cmdOpts.dryRun {
-		return printDryRun(opts, shortcutName, input)
-	}
-
-	if opts != nil && opts.noOutput {
-		_, err := runShortcutWithRetry(ctx, shortcutName, input, opts)
-		if err != nil {
-			return exitError(ExitCodeActionFailed, err)
-		}
-		return nil
-	}
-
-	ctxRun := ctx
-	if opts != nil && opts.timeout > 0 {
-		var cancel context.CancelFunc
-		ctxRun, cancel = context.WithTimeout(ctx, opts.timeout)
-		defer cancel()
-	}
-
-	out, err := runShortcutWithRetry(ctxRun, shortcutName, input, opts)
-	if err != nil {
-		_ = appendTrace(cmdOpts.trace, traceEntry{Shortcut: shortcutName, Input: input, Error: err.Error()})
-		return exitError(ExitCodeActionFailed, err)
-	}
-	_ = appendTrace(cmdOpts.trace, traceEntry{Shortcut: shortcutName, Input: input, Output: out})
-	if opts.isJSON() || opts.isPlain() {
-		var payload any
-		if err := json.Unmarshal(out, &payload); err != nil {
-			payload = map[string]any{
-				"raw":      strings.TrimSpace(string(out)),
-				"format":   "text",
-				"shortcut": shortcutName,
-			}
-		}
-		if opts.isPlain() {
-			return output.PrintJSON(os.Stdout, payload, false)
-		}
-		return output.PrintJSON(os.Stdout, payload, opts.pretty)
-	}
-	_, err = fmt.Fprint(os.Stdout, string(out))
-	return err
-}
-
-func resolveActionShortcut(ctx context.Context, def discovery.ActionDef, cmdOpts *actionCmdOptions) (string, error) {
 	if cmdOpts.shortcut != "" {
-		return cmdOpts.shortcut, nil
+		return runNamedShortcut(ctx, cmdOpts.shortcut, input, cmdOpts, opts)
 	}
 
 	taskForShortcut := cmdOpts.task
@@ -122,35 +74,36 @@ func resolveActionShortcut(ctx context.Context, def discovery.ActionDef, cmdOpts
 			taskForShortcut = task
 		}
 	}
-	name, candidates, err := resolveDirectShortcut(ctx, def, taskForShortcut)
+	candidates, err := actionCandidates(ctx, def, taskForShortcut)
 	if err != nil {
-		return "", err
+		return err
 	}
-	if name != "" {
-		return name, nil
+	if len(candidates) == 0 {
+		return exitError(ExitCodeShortcutMissing, fmt.Errorf("no shortcut candidates found for action %s", def.ID))
 	}
 
-	if len(candidates) > 0 {
-		return "", exitError(ExitCodeShortcutMissing, fmt.Errorf("no matching Streaks shortcut found for action %s; expected one of: %s", def.ID, strings.Join(candidates, ", ")))
+	if available, err := listShortcuts(ctx); err == nil {
+		if match := matchShortcutName(available, candidates); match != "" {
+			if cmdOpts.dryRun {
+				return printDryRun(opts, match, input)
+			}
+			return runNamedShortcut(ctx, match, input, cmdOpts, opts)
+		}
 	}
-	return "", exitError(ExitCodeShortcutMissing, fmt.Errorf("no matching Streaks shortcut found for action %s; create a Streaks shortcut or use --shortcut", def.ID))
+
+	if cmdOpts.dryRun {
+		return printDryRun(opts, candidates[0], input)
+	}
+	return runCandidateShortcuts(ctx, candidates, def.ID, input, cmdOpts, opts)
 }
 
-func resolveDirectShortcut(ctx context.Context, def discovery.ActionDef, task string) (string, []string, error) {
+func actionCandidates(ctx context.Context, def discovery.ActionDef, task string) ([]string, error) {
 	disc, err := discover(ctx)
 	if err != nil {
-		return "", nil, nil
-	}
-	available, err := listShortcuts(ctx)
-	if err != nil {
-		return "", nil, err
+		return nil, exitError(ExitCodeAppMissing, err)
 	}
 	candidates := discovery.ActionShortcutCandidates(def, disc.App, disc.AppIntentKeys, disc.AppShortcutPhrases, task)
-	if len(candidates) == 0 {
-		return "", nil, nil
-	}
-	name := matchShortcutName(available, candidates)
-	return name, candidates, nil
+	return candidates, nil
 }
 
 func buildActionInput(def discovery.ActionDef, cmdOpts *actionCmdOptions) ([]byte, error) {

@@ -6,6 +6,8 @@
 
 ## Streaks shortcut missing
 - Create the corresponding shortcut in the Shortcuts app.
+- `st` will try known Streaks shortcut names even if they’re not listed, but
+  Shortcuts still requires the shortcut to exist in your library.
 - Re-run: `st doctor` to verify.
 - You can also run a specific shortcut by name: `st <action> --shortcut "Name"`.
 

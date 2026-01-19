@@ -22,6 +22,9 @@ If new App Intent keys appear, re-run `st discover` and check the action list.
 
 `st` runs **existing Streaks shortcuts** in your Shortcuts library. Create those
 shortcuts via the Shortcuts app (e.g., from Streaks “Add Shortcut” buttons).
+`st` will attempt to run the known Streaks shortcut names even if they are not
+listed, but Shortcuts can only execute shortcuts that actually exist in your
+library.
 
 To see candidates for a specific action:
 
