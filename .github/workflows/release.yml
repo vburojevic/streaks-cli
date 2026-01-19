@@ -23,23 +23,20 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      - name: Run GoReleaser (with Homebrew)
-        if: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN != '' }}
+      - name: Install GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
           version: latest
-          args: release --clean
+          install-only: true
+
+      - name: Run GoReleaser
+        run: |
+          if [ -n "${HOMEBREW_TAP_GITHUB_TOKEN:-}" ]; then
+            goreleaser release --clean
+          else
+            goreleaser release --clean --skip=homebrew
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
-
-      - name: Run GoReleaser (skip Homebrew)
-        if: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN == '' }}
-        uses: goreleaser/goreleaser-action@v6
-        with:
-          distribution: goreleaser
-          version: latest
-          args: release --clean --skip=homebrew
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
