@@ -33,7 +33,9 @@ This is a concise reference for `st`. Run `st --help` or `st <command> --help` f
 
 - `st actions list` – list all actions.
 - `st actions describe <action>` – show details and sample input.
+  - `--task` expands shortcut candidates for task-based actions.
 - `st <action>` – run a Streaks action (e.g., `st task-complete --task "Read"`).
+  - Uses existing Streaks shortcuts if present; otherwise falls back to wrappers.
 
 ## Action flags
 
@@ -42,3 +44,4 @@ This is a concise reference for `st`. Run `st --help` or `st <command> --help` f
 - `--input` – raw JSON input string.
 - `--dry-run` – print wrapper + payload only.
 - `--trace <file>` – append JSON trace records (JSONL).
+- `--shortcut <name-or-id>` – run a specific shortcut by name/identifier.

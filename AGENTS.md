@@ -1,7 +1,7 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `cmd/st/`: CLI entrypoint.
+- `cmd/streaks-cli/`: CLI entrypoint.
 - `internal/cli/`: Cobra commands and exit-code handling.
 - `internal/discovery/`: App bundle discovery (Info.plist + Localizable.strings).
 - `internal/shortcuts/`: Shortcuts CLI integration.
@@ -40,6 +40,7 @@
 - Config path: `~/.config/streaks-cli/config.json` (`STREAKS_CLI_CONFIG` override).
 - Agent mode: `--agent` or `STREAKS_CLI_AGENT=1` for JSON output.
 - Output modes: `--output human|json|plain`.
+- Action execution prefers existing Streaks shortcuts; wrappers are fallback for guaranteed JSON.
 
 ## Release Workflow
 - Tag `vX.Y.Z`, push the tag.

@@ -19,7 +19,19 @@ Shortcuts database or reverse engineer binaries.
 If new App Intent keys appear, re-run `st install` and update wrapper
 shortcuts to match the new capabilities.
 
-## Install
+## Direct shortcuts (automatic)
+
+If you already have Streaks shortcuts in your Shortcuts library (for example,
+created via the “Add Shortcut” button for an App Shortcut), `st` will use them
+automatically. No wrapper config is required for that path.
+
+You can also target a specific shortcut explicitly:
+
+```
+st task-list --shortcut "All Tasks"
+```
+
+## Install (wrappers)
 
 ```
 st install

@@ -5,7 +5,8 @@
 - Re-run: `st discover`.
 
 ## Wrapper shortcut missing
-- Run: `st wrappers list` to see expected names.
+- If you already have a matching Streaks shortcut, `st` will use it automatically.
+- Otherwise run: `st wrappers list` to see expected names.
 - Create missing shortcuts in Shortcuts.
 - Re-run: `st doctor`.
 

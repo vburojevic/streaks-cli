@@ -36,6 +36,7 @@ func Discover(ctx context.Context) (Discovery, error) {
 		return Discovery{}, err
 	}
 	appShortcutKeys, _ := ReadAppShortcutKeys(ctx, info.Resources)
+	appShortcutPhrases, _ := ReadAppShortcutPhrases(ctx, info.Resources)
 
 	actions, unmapped := DetectActions(extractKeys(appIntentKeys))
 
@@ -52,6 +53,7 @@ func Discover(ctx context.Context) (Discovery, error) {
 		ShortcutsCLIAvailable: shortcutsAvailable,
 		AppIntentKeys:         appIntentKeys,
 		AppShortcutKeys:       appShortcutKeys,
+		AppShortcutPhrases:    appShortcutPhrases,
 		XCallbackSupported:    xcallback.Supported(urlSchemes),
 		Actions:               actions,
 		UnmappedKeys:          unmapped,

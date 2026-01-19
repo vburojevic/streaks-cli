@@ -14,6 +14,7 @@ import (
 	"streaks-cli/internal/config"
 	"streaks-cli/internal/discovery"
 	"streaks-cli/internal/output"
+	"streaks-cli/internal/shortcuts"
 )
 
 type wrapperEntry struct {
@@ -329,7 +330,7 @@ func verifyWrappers(task, status string, opts *rootOptions) ([]wrapperVerifyResu
 			ctxRun, cancel = context.WithTimeout(ctx, opts.timeout)
 		}
 
-		out, err := runShortcutWithRetry(ctxRun, entry.Wrapper, payload, opts)
+		out, err := runShortcutWithRetry(ctxRun, entry.Wrapper, payload, opts, shortcuts.RunOptions{OutputType: "public.json"})
 		if cancel != nil {
 			cancel()
 		}

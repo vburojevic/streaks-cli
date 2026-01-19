@@ -1,9 +1,11 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"sort"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -21,9 +23,10 @@ type actionInfo struct {
 }
 
 type actionDetail struct {
-	Action  actionInfo     `json:"action"`
-	Wrapper string         `json:"wrapper"`
-	Sample  map[string]any `json:"sample_input"`
+	Action             actionInfo     `json:"action"`
+	Wrapper            string         `json:"wrapper"`
+	Sample             map[string]any `json:"sample_input"`
+	ShortcutCandidates []string       `json:"shortcut_candidates,omitempty"`
 }
 
 func newActionsCmd(opts *rootOptions) *cobra.Command {
@@ -81,6 +84,7 @@ func newActionsListCmd(opts *rootOptions) *cobra.Command {
 }
 
 func newActionsDescribeCmd(opts *rootOptions) *cobra.Command {
+	var task string
 	cmd := &cobra.Command{
 		Use:   "describe <action-id>",
 		Short: "Describe an action and its input",
@@ -98,6 +102,10 @@ func newActionsDescribeCmd(opts *rootOptions) *cobra.Command {
 			if wrapper == "" {
 				wrapper = config.WrapperName(cfg.WrapperPrefix, def.ID)
 			}
+			var shortcutCandidates []string
+			if disc, err := discover(context.Background()); err == nil {
+				shortcutCandidates = discovery.ActionShortcutCandidates(def, disc.App, disc.AppIntentKeys, disc.AppShortcutPhrases, task)
+			}
 			detail := actionDetail{
 				Action: actionInfo{
 					ID:           def.ID,
@@ -106,8 +114,9 @@ func newActionsDescribeCmd(opts *rootOptions) *cobra.Command {
 					RequiresTask: def.RequiresTask,
 					Parameters:   def.ParamOptions,
 				},
-				Wrapper: wrapper,
-				Sample:  samplePayload(def),
+				Wrapper:            wrapper,
+				Sample:             samplePayload(def),
+				ShortcutCandidates: shortcutCandidates,
 			}
 			if opts.isJSON() {
 				return output.PrintJSON(os.Stdout, detail, opts.pretty)
@@ -122,8 +131,12 @@ func newActionsDescribeCmd(opts *rootOptions) *cobra.Command {
 			if len(detail.Sample) > 0 {
 				fmt.Printf("Sample input: %v\n", detail.Sample)
 			}
+			if len(detail.ShortcutCandidates) > 0 {
+				fmt.Printf("Shortcut candidates: %s\n", strings.Join(detail.ShortcutCandidates, ", "))
+			}
 			return nil
 		},
 	}
+	cmd.Flags().StringVar(&task, "task", "", "Task name to expand shortcut templates")
 	return cmd
 }

@@ -1,6 +1,8 @@
 # Wrapper Shortcuts Guide
 
-Wrapper shortcuts connect `st` to Streaks’ Shortcuts actions.
+Wrapper shortcuts connect `st` to Streaks’ Shortcuts actions. They’re optional if
+you already have Streaks shortcuts in your library, but required for guaranteed
+JSON output.
 
 ## List required wrappers
 

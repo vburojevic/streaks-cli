@@ -29,6 +29,7 @@ All JSON outputs are UTF-8 and printed to stdout. Errors are printed to stderr a
   "shortcuts_cli_available": true,
   "app_intent_keys": [{"key":"...","value":"..."}],
   "app_shortcut_keys": ["..."],
+  "app_shortcut_phrases": [{"key":"...","value":"..."}],
   "xcallback_supported": false,
   "actions": [{"id":"task-complete","title":"...","transport":"shortcuts","requires_task":true}],
   "unmapped_keys": ["..."],
@@ -92,12 +93,19 @@ All JSON outputs are UTF-8 and printed to stdout. Errors are printed to stderr a
 ## `st actions describe`
 
 ```json
-{"action":{"id":"...","title":"...","transport":"shortcuts","requires_task":true,"parameters":{}},"wrapper":"st task-complete","sample_input":{"task":"<task>"}}
+{"action":{"id":"...","title":"...","transport":"shortcuts","requires_task":true,"parameters":{}},"wrapper":"st task-complete","sample_input":{"task":"<task>"},"shortcut_candidates":["All Tasks"]}
 ```
 
 ## Action commands (`st <action>`)
 
-Wrapper output is passed through as JSON. For `--dry-run`, output is:
+Wrapper output is passed through as JSON. If a direct shortcut returns non-JSON,
+`--output json` wraps it as:
+
+```json
+{"raw":"...","format":"text","shortcut":"All Tasks"}
+```
+
+For `--dry-run`, output is:
 
 ```json
 {"dry_run":true,"wrapper":"st task-complete","input":{"task":"Example"}}

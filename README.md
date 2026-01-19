@@ -25,12 +25,13 @@ make build
 
 ```
 st discover
-st install
 st doctor
 st open
 ```
 
-If wrappers are missing, follow `docs/wrappers.md` to create them in Shortcuts.
+If you already have Streaks shortcuts in your library, `st <action>` will use
+them automatically. For guaranteed JSON output, create wrapper shortcuts
+(`docs/wrappers.md`) and run `st install`.
 
 ## Testing
 
@@ -44,6 +45,9 @@ make smoke   # requires Streaks installed
 ```
 # Run a task action
 st task-complete --task "Read 20 pages"
+
+# Run a specific shortcut directly
+st task-list --shortcut "All Tasks"
 
 # Agent-friendly JSON
 st --agent discover

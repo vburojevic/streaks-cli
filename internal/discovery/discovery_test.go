@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -111,5 +112,48 @@ func TestReadAppShortcutKeys(t *testing.T) {
 	}
 	if len(keys) != 1 {
 		t.Fatalf("expected 1 key, got %d", len(keys))
+	}
+}
+
+func TestReadAppShortcutPhrases(t *testing.T) {
+	root := t.TempDir()
+	res := filepath.Join(root, "Resources")
+	path := filepath.Join(res, "fr.lproj", "AppShortcuts.strings")
+
+	stringsPlist := `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>#!SET#!_AppIntent.TaskList.ListOf${applicationName}[0]</key>
+	<string>Liste des taches</string>
+</dict>
+</plist>`
+
+	writeFile(t, path, stringsPlist)
+	t.Setenv("LANG", "fr_FR.UTF-8")
+	keys, err := ReadAppShortcutPhrases(context.Background(), res)
+	if err != nil {
+		t.Fatalf("ReadAppShortcutPhrases: %v", err)
+	}
+	if len(keys) != 1 || keys[0].Value == "" {
+		t.Fatalf("unexpected phrases: %v", keys)
+	}
+}
+
+func TestActionShortcutCandidates(t *testing.T) {
+	def := ActionDef{
+		ID:        "task-list",
+		Title:     "List tasks",
+		Transport: TransportShortcuts,
+		Keys:      []string{"AppIntent.TaskList.AllTasks"},
+	}
+	app := AppInfo{Name: "Streaks"}
+	intentKeys := []AppIntentKey{{Key: "AppIntent.TaskList.AllTasks", Value: "All Tasks"}}
+	phrases := []AppIntentKey{{Key: "#!SET#!_AppIntent.TaskList.ListOf${applicationName}[0]", Value: "List of ${applicationName}"}}
+
+	candidates := ActionShortcutCandidates(def, app, intentKeys, phrases, "")
+	joined := strings.Join(candidates, "|")
+	if !strings.Contains(joined, "All Tasks") || !strings.Contains(joined, "List of Streaks") {
+		t.Fatalf("unexpected candidates: %v", candidates)
 	}
 }

@@ -16,6 +16,10 @@ type Shortcut struct {
 	ID   string `json:"id"`
 }
 
+type RunOptions struct {
+	OutputType string
+}
+
 var listLine = regexp.MustCompile(`^(.*) \(([0-9A-Fa-f-]+)\)$`)
 
 func List(ctx context.Context) ([]Shortcut, error) {
@@ -59,6 +63,10 @@ func Exists(ctx context.Context, name string) (bool, error) {
 }
 
 func Run(ctx context.Context, name string, input []byte) ([]byte, error) {
+	return RunWithOptions(ctx, name, input, RunOptions{OutputType: "public.json"})
+}
+
+func RunWithOptions(ctx context.Context, name string, input []byte, opts RunOptions) ([]byte, error) {
 	inputPath := ""
 	outputPath := ""
 	var err error
@@ -75,7 +83,10 @@ func Run(ctx context.Context, name string, input []byte) ([]byte, error) {
 	}
 	defer os.Remove(outputPath)
 
-	args := []string{"run", name, "--input-path", inputPath, "--output-path", outputPath, "--output-type", "public.json"}
+	args := []string{"run", name, "--input-path", inputPath, "--output-path", outputPath}
+	if strings.TrimSpace(opts.OutputType) != "" {
+		args = append(args, "--output-type", opts.OutputType)
+	}
 	cmd := exec.CommandContext(ctx, "/usr/bin/shortcuts", args...)
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
