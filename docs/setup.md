@@ -68,6 +68,12 @@ st wrappers list
 st wrappers sample task-complete
 ```
 
+To validate wrappers:
+
+```
+st wrappers verify --task "Example Task"
+```
+
 ### Action map
 
 Match each wrapper to the Streaks action shown in Shortcuts:

@@ -8,6 +8,18 @@ Wrapper shortcuts connect `st` to Streaks’ Shortcuts actions.
 st wrappers list
 ```
 
+## Verify wrappers
+
+```
+st wrappers verify --task "Example Task"
+```
+
+## Wrapper doctor
+
+```
+st wrappers doctor --task "Example Task"
+```
+
 ## Generate input templates
 
 ```

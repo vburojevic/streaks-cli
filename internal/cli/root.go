@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -15,15 +16,23 @@ import (
 var version = "dev"
 
 type rootOptions struct {
-	json   bool
-	pretty bool
-	config string
-	agent  bool
+	json      bool
+	pretty    bool
+	config    string
+	agent     bool
+	output    string
+	plain     bool
+	quiet     bool
+	verbose   bool
+	timeout   time.Duration
+	retries   int
+	retryWait time.Duration
 }
 
 const envDisableDiscovery = "STREAKS_CLI_DISABLE_DISCOVERY"
 const envAgentMode = "STREAKS_CLI_AGENT"
 const envJSONOutput = "STREAKS_CLI_JSON"
+const envOutputMode = "STREAKS_CLI_OUTPUT"
 
 func newRootCmd() *cobra.Command {
 	opts := &rootOptions{}
@@ -40,20 +49,44 @@ func newRootCmd() *cobra.Command {
 					return err
 				}
 			}
+			if opts.output == "" {
+				if env := os.Getenv(envOutputMode); env != "" {
+					opts.output = env
+				}
+			}
 			if opts.agent || isTruthy(os.Getenv(envAgentMode)) {
 				opts.json = true
 				opts.pretty = false
 			}
+			if opts.plain {
+				opts.output = string(outputPlain)
+			}
 			if opts.json {
+				opts.output = string(outputJSON)
+			}
+			mode, err := parseOutputMode(opts.output)
+			if err != nil {
+				return exitError(ExitCodeUsage, err)
+			}
+			if mode == outputJSON {
 				_ = os.Setenv(envJSONOutput, "1")
+			} else {
+				_ = os.Unsetenv(envJSONOutput)
 			}
 			return nil
 		},
 	}
 
 	cmd.PersistentFlags().BoolVar(&opts.json, "json", false, "Output JSON when supported")
+	cmd.PersistentFlags().StringVar(&opts.output, "output", "", "Output mode: human, json, plain")
+	cmd.PersistentFlags().BoolVar(&opts.plain, "plain", false, "Plain output (equivalent to --output plain)")
 	cmd.PersistentFlags().BoolVar(&opts.pretty, "pretty", isTTY(os.Stdout), "Pretty-print JSON output")
 	cmd.PersistentFlags().BoolVar(&opts.agent, "agent", false, "Agent-friendly mode (implies --json, disables pretty JSON)")
+	cmd.PersistentFlags().BoolVar(&opts.quiet, "quiet", false, "Suppress non-essential output")
+	cmd.PersistentFlags().BoolVar(&opts.verbose, "verbose", false, "Verbose output")
+	cmd.PersistentFlags().DurationVar(&opts.timeout, "timeout", 30*time.Second, "Timeout for Shortcuts runs")
+	cmd.PersistentFlags().IntVar(&opts.retries, "retries", 0, "Retry failed Shortcuts runs")
+	cmd.PersistentFlags().DurationVar(&opts.retryWait, "retry-delay", time.Second, "Initial delay between retries")
 	cmd.PersistentFlags().StringVar(&opts.config, "config", "", "Path to config file (overrides STREAKS_CLI_CONFIG)")
 
 	cmd.AddCommand(newDiscoverCmd(opts))
@@ -61,6 +94,7 @@ func newRootCmd() *cobra.Command {
 	cmd.AddCommand(newInstallCmd(opts))
 	cmd.AddCommand(newOpenCmd(opts))
 	cmd.AddCommand(newWrappersCmd(opts))
+	cmd.AddCommand(newActionsCmd(opts))
 
 	addActionCommands(cmd, availableActionDefs(), opts)
 

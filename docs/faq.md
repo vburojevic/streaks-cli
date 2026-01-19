@@ -24,3 +24,6 @@
 ## Agent output parsing
 - Use `--agent` or `--json` for machine-readable output.
 - Error responses are JSON when `--agent` is enabled.
+
+## Output formats
+- `--output human` (default), `--output json`, or `--output plain`.

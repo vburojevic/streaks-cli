@@ -21,6 +21,9 @@ type actionCmdOptions struct {
 	task   string
 	status string
 	input  string
+	dryRun bool
+	stdin  bool
+	trace  string
 }
 
 var runShortcut = shortcuts.Run
@@ -42,6 +45,9 @@ func addActionCommands(root *cobra.Command, defs []discovery.ActionDef, opts *ro
 			},
 		}
 		cmd.Flags().StringVar(&cmdOpts.input, "input", "", "Raw input to pass to the wrapper (overrides --task/--status)")
+		cmd.Flags().BoolVar(&cmdOpts.stdin, "stdin", false, "Force reading input from stdin")
+		cmd.Flags().BoolVar(&cmdOpts.dryRun, "dry-run", false, "Print wrapper and payload without running")
+		cmd.Flags().StringVar(&cmdOpts.trace, "trace", "", "Append JSON trace of input/output to a file")
 		if def.RequiresTask {
 			cmd.Flags().StringVar(&cmdOpts.task, "task", "", "Task name")
 		}
@@ -80,14 +86,30 @@ func runActionCommand(ctx context.Context, def discovery.ActionDef, cmdOpts *act
 	if err != nil {
 		return exitError(ExitCodeUsage, err)
 	}
-	out, err := runShortcut(ctx, wrapperName, input)
+	if cmdOpts.dryRun {
+		return printDryRun(opts, wrapperName, input)
+	}
+
+	ctxRun := ctx
+	if opts != nil && opts.timeout > 0 {
+		var cancel context.CancelFunc
+		ctxRun, cancel = context.WithTimeout(ctx, opts.timeout)
+		defer cancel()
+	}
+
+	out, err := runShortcutWithRetry(ctxRun, wrapperName, input, opts)
 	if err != nil {
+		_ = appendTrace(cmdOpts.trace, traceEntry{Wrapper: wrapperName, Input: input, Error: err.Error()})
 		return exitError(ExitCodeActionFailed, err)
 	}
-	if opts.json {
+	_ = appendTrace(cmdOpts.trace, traceEntry{Wrapper: wrapperName, Input: input, Output: out})
+	if opts.isJSON() || opts.isPlain() {
 		var payload any
 		if err := json.Unmarshal(out, &payload); err != nil {
-			return fmt.Errorf("wrapper output is not valid JSON: %w", err)
+			return exitError(ExitCodeActionFailed, fmt.Errorf("wrapper output is not valid JSON: %w", err))
+		}
+		if opts.isPlain() {
+			return output.PrintJSON(os.Stdout, payload, false)
 		}
 		return output.PrintJSON(os.Stdout, payload, opts.pretty)
 	}
@@ -100,7 +122,7 @@ func buildActionInput(def discovery.ActionDef, cmdOpts *actionCmdOptions) ([]byt
 		return []byte(cmdOpts.input), nil
 	}
 
-	if !isTTY(os.Stdin) {
+	if cmdOpts.stdin || !isTTY(os.Stdin) {
 		data, err := io.ReadAll(os.Stdin)
 		if err != nil {
 			return nil, err
@@ -128,4 +150,28 @@ func buildActionInput(def discovery.ActionDef, cmdOpts *actionCmdOptions) ([]byt
 		return nil, err
 	}
 	return data, nil
+}
+
+func printDryRun(opts *rootOptions, wrapper string, input []byte) error {
+	payload := map[string]any{
+		"dry_run": true,
+		"wrapper": wrapper,
+	}
+	if input != nil {
+		payload["input"] = json.RawMessage(input)
+	}
+	if opts != nil {
+		if opts.isJSON() {
+			return output.PrintJSON(os.Stdout, payload, opts.pretty)
+		}
+		if opts.isPlain() {
+			return output.PrintJSON(os.Stdout, payload, false)
+		}
+	}
+	if input != nil {
+		fmt.Fprintf(os.Stdout, "Dry run: %s %s\n", wrapper, string(input))
+		return nil
+	}
+	fmt.Fprintf(os.Stdout, "Dry run: %s\n", wrapper)
+	return nil
 }

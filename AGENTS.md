@@ -8,7 +8,7 @@
 - `internal/config/`: Config read/write (`~/.config/streaks-cli/config.json`).
 - `internal/output/`: JSON helpers.
 - `internal/xcallback/`: Stub for future x-callback URL support.
-- `docs/`: `setup.md`, `wrappers.md`, `release.md`, `faq.md`.
+- `docs/`: `setup.md`, `wrappers.md`, `release.md`, `faq.md`, `schema.md`.
 - `.github/workflows/`: CI workflows.
 
 ## Build, Test, and Development Commands
@@ -39,6 +39,7 @@
 - Automation uses official surfaces only (Shortcuts, URL scheme).
 - Config path: `~/.config/streaks-cli/config.json` (`STREAKS_CLI_CONFIG` override).
 - Agent mode: `--agent` or `STREAKS_CLI_AGENT=1` for JSON output.
+- Output modes: `--output human|json|plain`.
 
 ## Release Workflow
 - Tag `vX.Y.Z`, push the tag.

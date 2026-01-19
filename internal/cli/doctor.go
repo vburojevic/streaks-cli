@@ -39,13 +39,21 @@ func newDoctorCmd(opts *rootOptions) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			if opts.json {
+			if opts.isJSON() {
 				if err := output.PrintJSON(os.Stdout, report, opts.pretty); err != nil {
 					return err
 				}
 				return doctorExitError(report)
 			}
-			printDoctor(report)
+			if opts.isPlain() {
+				if !opts.quiet || doctorExitError(report) != nil {
+					printDoctorPlain(report)
+				}
+				return doctorExitError(report)
+			}
+			if !opts.quiet || doctorExitError(report) != nil {
+				printDoctor(report)
+			}
 			return doctorExitError(report)
 		},
 	}
@@ -151,5 +159,28 @@ func printDoctor(report doctorReport) {
 		for _, warning := range report.Warnings {
 			fmt.Printf("  - %s\n", warning)
 		}
+	}
+}
+
+func printDoctorPlain(report doctorReport) {
+	status := func(ok bool) string {
+		if ok {
+			return "ok"
+		}
+		return "missing"
+	}
+	fmt.Printf("app\t%s\t%s\n", status(report.AppInstalled), report.AppPath)
+	fmt.Printf("shortcuts\t%s\t%s\n", status(report.ShortcutsCLI), report.ShortcutsCLIPath)
+	fmt.Printf("config\t%s\t%s\n", status(report.ConfigPresent), report.ConfigPath)
+	if len(report.MissingWrappers) == 0 {
+		fmt.Printf("wrappers\tok\t0\n")
+	} else {
+		fmt.Printf("wrappers\tmissing\t%d\n", len(report.MissingWrappers))
+		for _, name := range report.MissingWrappers {
+			fmt.Printf("wrapper-missing\t%s\n", name)
+		}
+	}
+	for _, warning := range report.Warnings {
+		fmt.Printf("warning\t%s\n", warning)
 	}
 }

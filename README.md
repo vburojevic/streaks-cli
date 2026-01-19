@@ -31,6 +31,9 @@ go build -o bin/st ./cmd/streaks-cli
 - `doctor` – verify Streaks installation and wrapper setup
 - `install` – write config and report missing wrappers
 - `wrappers` – list wrappers and sample inputs
+- `wrappers verify` – validate wrappers return JSON
+- `wrappers doctor` – full wrapper readiness report
+- `actions` – list and describe available actions
 - `open` – open Streaks via URL scheme
 - `<action>` – run a Streaks action via wrapper shortcut
 
@@ -49,16 +52,35 @@ Use structured output for agents:
 st --agent discover
 st --agent doctor
 st --agent wrappers list
+st --agent actions list
 ```
 
 `--agent` implies `--json` and disables pretty formatting for stable parsing.
 On failures, the CLI returns JSON errors to stderr (e.g. `{"error":"...","code":10}`).
 You can also set `STREAKS_CLI_AGENT=1`.
 
+## Output Modes
+
+```
+st --output human   # default
+st --output json    # structured output
+st --output plain   # line-based output
+```
+
+`--json` is equivalent to `--output json`.
+
+## Action Inputs
+
+- Use `--stdin` to force stdin JSON input.
+- Use `--dry-run` to print the wrapper and payload without running.
+- Use `--trace <file>` to append JSON trace records of input/output.
+- Use `--timeout`, `--retries`, `--retry-delay` to control Shortcuts execution.
+
 ## Docs
 
 See `docs/setup.md` for discovery details and wrapper shortcut setup.
 See `docs/wrappers.md` and `docs/faq.md` for troubleshooting.
+See `docs/schema.md` for JSON output schema.
 
 ## License
 

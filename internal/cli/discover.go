@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -21,8 +22,14 @@ func newDiscoverCmd(opts *rootOptions) *cobra.Command {
 				return exitError(ExitCodeAppMissing, err)
 			}
 			if markdown {
+				if opts.isJSON() {
+					return exitError(ExitCodeUsage, fmt.Errorf("--markdown is incompatible with JSON output"))
+				}
 				_, err := os.Stdout.WriteString(formatDiscoverMarkdown(disc))
 				return err
+			}
+			if opts.isPlain() {
+				return output.PrintJSON(os.Stdout, disc, false)
 			}
 			return output.PrintJSON(os.Stdout, disc, opts.pretty)
 		},
