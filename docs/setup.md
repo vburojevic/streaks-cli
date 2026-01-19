@@ -29,6 +29,12 @@ This writes the config file and reports which wrapper shortcuts are missing. The
 Shortcuts CLI does not provide a supported way to create shortcuts programmatically,
 so wrappers must be created manually.
 
+Optional checklist:
+
+```
+streaks-cli install --checklist wrappers-checklist.txt
+```
+
 ## Wrapper shortcuts (manual)
 
 Wrapper shortcuts must:
@@ -55,6 +61,13 @@ Default names follow this pattern:
 streaks-cli <action-id>
 ```
 
+To list wrappers and sample inputs:
+
+```
+streaks-cli wrappers list
+streaks-cli wrappers sample task-complete
+```
+
 ### Action map
 
 Match each wrapper to the Streaks action shown in Shortcuts:
@@ -76,3 +89,5 @@ After creating wrappers, verify:
 ```
 streaks-cli doctor
 ```
+
+See `docs/wrappers.md` for more detail.

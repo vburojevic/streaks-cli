@@ -32,6 +32,7 @@ type Discovery struct {
 	ShortcutsCLIAvailable bool           `json:"shortcuts_cli_available"`
 	AppIntentKeys         []AppIntentKey `json:"app_intent_keys"`
 	AppShortcutKeys       []string       `json:"app_shortcut_keys"`
+	XCallbackSupported    bool           `json:"xcallback_supported"`
 	Actions               []Action       `json:"actions"`
 	UnmappedKeys          []string       `json:"unmapped_keys,omitempty"`
 	Notes                 []string       `json:"notes,omitempty"`

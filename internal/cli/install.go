@@ -15,6 +15,7 @@ import (
 
 func newInstallCmd(opts *rootOptions) *cobra.Command {
 	var force bool
+	var checklistPath string
 	cmd := &cobra.Command{
 		Use:   "install",
 		Short: "Install or verify wrapper shortcuts and config",
@@ -26,6 +27,17 @@ func newInstallCmd(opts *rootOptions) *cobra.Command {
 				return err
 			}
 			fmt.Printf("Config written: %s\n", path)
+
+			if checklistPath != "" {
+				entries, err := listWrappers()
+				if err != nil {
+					return err
+				}
+				if err := writeChecklist(checklistPath, entries); err != nil {
+					return err
+				}
+				fmt.Printf("Checklist written: %s\n", checklistPath)
+			}
 
 			missing, err := missingWrappers(context.Background(), cfg.Wrappers)
 			if err != nil {
@@ -46,6 +58,7 @@ func newInstallCmd(opts *rootOptions) *cobra.Command {
 		},
 	}
 	cmd.Flags().BoolVar(&force, "force", false, "Overwrite existing config")
+	cmd.Flags().StringVar(&checklistPath, "checklist", "", "Write a wrapper checklist to a file")
 	return cmd
 }
 

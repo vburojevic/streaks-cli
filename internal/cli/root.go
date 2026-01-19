@@ -1,7 +1,7 @@
 package cli
 
 import (
-	"context"
+	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -23,9 +23,11 @@ const envDisableDiscovery = "STREAKS_CLI_DISABLE_DISCOVERY"
 func newRootCmd() *cobra.Command {
 	opts := &rootOptions{}
 	cmd := &cobra.Command{
-		Use:     "streaks-cli",
-		Short:   "CLI for Streaks (Crunchy Bagel)",
-		Version: version,
+		Use:           "streaks-cli",
+		Short:         "CLI for Streaks (Crunchy Bagel)",
+		Version:       version,
+		SilenceErrors: true,
+		SilenceUsage:  true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			if opts.config != "" {
 				if err := os.Setenv(config.EnvConfigPath, opts.config); err != nil {
@@ -44,26 +46,20 @@ func newRootCmd() *cobra.Command {
 	cmd.AddCommand(newDoctorCmd(opts))
 	cmd.AddCommand(newInstallCmd(opts))
 	cmd.AddCommand(newOpenCmd(opts))
+	cmd.AddCommand(newWrappersCmd(opts))
 
-	defs := discovery.DefaultActionDefinitions()
-	if os.Getenv(envDisableDiscovery) == "" {
-		ctx := context.Background()
-		disc, err := discovery.Discover(ctx)
-		if err == nil && len(disc.Actions) > 0 {
-			present := make(map[string]discovery.Action, len(disc.Actions))
-			for _, action := range disc.Actions {
-				present[action.ID] = action
-			}
-			defs = filterDefs(defs, present)
-		}
-	}
-	addActionCommands(cmd, defs, opts)
+	addActionCommands(cmd, availableActionDefs(), opts)
 
 	return cmd
 }
 
 func Execute() {
 	if err := newRootCmd().Execute(); err != nil {
+		if code, inner := exitCodeFromError(err); code != 0 {
+			fmt.Fprintln(os.Stderr, inner.Error())
+			os.Exit(code)
+		}
+		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)
 	}
 }

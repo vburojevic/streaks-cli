@@ -30,6 +30,7 @@ go build -o bin/streaks-cli ./cmd/streaks-cli
 - `discover` – print discovered capabilities as JSON
 - `doctor` – verify Streaks installation and wrapper setup
 - `install` – write config and report missing wrappers
+- `wrappers` – list wrappers and sample inputs
 - `open` – open Streaks via URL scheme
 - `<action>` – run a Streaks action via wrapper shortcut
 
@@ -43,6 +44,7 @@ Override via `STREAKS_CLI_CONFIG` or `--config`.
 ## Docs
 
 See `docs/setup.md` for discovery details and wrapper shortcut setup.
+See `docs/wrappers.md` and `docs/faq.md` for troubleshooting.
 
 ## License
 

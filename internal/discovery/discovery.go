@@ -11,6 +11,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"streaks-cli/internal/xcallback"
 )
 
 const (
@@ -50,6 +52,7 @@ func Discover(ctx context.Context) (Discovery, error) {
 		ShortcutsCLIAvailable: shortcutsAvailable,
 		AppIntentKeys:         appIntentKeys,
 		AppShortcutKeys:       appShortcutKeys,
+		XCallbackSupported:    xcallback.Supported(urlSchemes),
 		Actions:               actions,
 		UnmappedKeys:          unmapped,
 	}

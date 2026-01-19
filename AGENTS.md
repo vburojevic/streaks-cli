@@ -1,46 +1,45 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `cmd/streaks-cli/`: CLI entrypoint (`main.go`).
-- `internal/cli/`: Cobra commands and CLI wiring.
-- `internal/discovery/`: Local capability discovery from the Streaks app bundle.
+- `cmd/streaks-cli/`: CLI entrypoint.
+- `internal/cli/`: Cobra commands and exit-code handling.
+- `internal/discovery/`: App bundle discovery (Info.plist + Localizable.strings).
 - `internal/shortcuts/`: Shortcuts CLI integration.
 - `internal/config/`: Config read/write (`~/.config/streaks-cli/config.json`).
-- `internal/output/`: JSON output helpers.
-- `docs/`: Contributor and setup docs (`docs/setup.md`).
-- `bin/`: Local build output (ignored by git).
+- `internal/output/`: JSON helpers.
+- `internal/xcallback/`: Stub for future x-callback URL support.
+- `docs/`: `setup.md`, `wrappers.md`, `release.md`, `faq.md`.
+- `.github/workflows/`: CI workflows.
 
 ## Build, Test, and Development Commands
-- `go build -o bin/streaks-cli ./cmd/streaks-cli` — build the CLI binary.
-- `go test ./...` — run all unit tests.
-- `goreleaser release --clean` — build and publish releases (CI only).
-- `bin/streaks-cli discover` — print discovered capabilities.
-- `bin/streaks-cli doctor` — verify Streaks + wrapper setup.
-- `bin/streaks-cli install` — write config and report missing wrappers.
+- `make build` — build `bin/streaks-cli`.
+- `make test` — run all unit tests.
+- `make lint` — run golangci-lint.
+- `make integration` — run integration tests (requires Streaks).
+- `goreleaser release --snapshot --clean` — local dry run.
 
 ## Coding Style & Naming Conventions
-- Go formatting: run `gofmt -w` on modified `.go` files.
-- Package names are lowercase, short, and descriptive (e.g., `discovery`).
-- Command names are kebab-case and map to discovered actions (e.g., `task-complete`).
-- Use explicit error messages; return errors instead of panicking.
+- Use `gofmt -w` on modified `.go` files.
+- Package names are lowercase and descriptive.
+- Command names are kebab-case (e.g., `task-complete`).
+- Prefer explicit error messages over panics.
 
 ## Testing Guidelines
-- Framework: Go’s built-in testing (`*_test.go`).
-- Run `go test ./...` before committing.
-- Tests should avoid calling the real Streaks app or Shortcuts; use stubs/mocks.
-- CLI tests may set `STREAKS_CLI_DISABLE_DISCOVERY=1` to avoid discovery I/O.
+- Framework: Go `*_test.go`.
+- Unit tests should not call Streaks or Shortcuts.
+- Integration tests are gated by `STREAKS_CLI_INTEGRATION=1`.
 
 ## Commit & Pull Request Guidelines
-- Commit messages follow Conventional Commits (e.g., `feat: ...`, `chore: ...`, `test: ...`).
-- PRs should include: summary, test results, and any new discovery mappings.
-- If discovery logic changes, update `docs/setup.md` with user-facing steps.
+- Use Conventional Commits (e.g., `feat:`, `chore:`, `test:`).
+- PRs should include summary + test results.
+- If discovery mappings change, update `docs/setup.md` and `docs/wrappers.md`.
 
 ## Security & Configuration Notes
-- Do not read sandboxed databases or reverse-engineer binaries.
-- Automation is limited to official surfaces (Shortcuts, URL scheme).
-- Config path is `~/.config/streaks-cli/config.json` (override with `STREAKS_CLI_CONFIG`).
+- Do not read sandboxed databases or reverse engineer binaries.
+- Automation uses official surfaces only (Shortcuts, URL scheme).
+- Config path: `~/.config/streaks-cli/config.json` (`STREAKS_CLI_CONFIG` override).
 
 ## Release Workflow
-- Tag releases with `vX.Y.Z` (e.g., `v0.2.0`), then push the tag.
-- GitHub Actions runs GoReleaser to publish binaries and update the Homebrew tap.
-- Requires secret `HOMEBREW_TAP_GITHUB_TOKEN` with write access to `vburojevic/homebrew-tap`.
+- Tag `vX.Y.Z`, push the tag.
+- GitHub Actions runs GoReleaser and updates the Homebrew tap.
+- Requires `HOMEBREW_TAP_GITHUB_TOKEN` secret with write access to `vburojevic/homebrew-tap`.

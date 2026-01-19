@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -24,6 +25,7 @@ type actionCmdOptions struct {
 
 var runShortcut = shortcuts.Run
 var loadConfig = config.Load
+var shortcutExists = shortcuts.Exists
 
 func addActionCommands(root *cobra.Command, defs []discovery.ActionDef, opts *rootOptions) {
 	for _, def := range defs {
@@ -59,13 +61,20 @@ func runActionCommand(ctx context.Context, def discovery.ActionDef, cmdOpts *act
 	if wrapperName == "" {
 		wrapperName = config.WrapperName(cfg.WrapperPrefix, def.ID)
 	}
-	input, err := buildActionInput(def, cmdOpts)
+	exists, err := shortcutExists(ctx, wrapperName)
 	if err != nil {
 		return err
 	}
+	if !exists {
+		return exitError(ExitCodeWrappersMissing, fmt.Errorf("wrapper shortcut not found: %s", wrapperName))
+	}
+	input, err := buildActionInput(def, cmdOpts)
+	if err != nil {
+		return exitError(ExitCodeUsage, err)
+	}
 	out, err := runShortcut(ctx, wrapperName, input)
 	if err != nil {
-		return err
+		return exitError(ExitCodeActionFailed, err)
 	}
 	if opts.json {
 		var payload any
@@ -95,10 +104,10 @@ func buildActionInput(def discovery.ActionDef, cmdOpts *actionCmdOptions) ([]byt
 
 	payload := map[string]any{}
 	if def.RequiresTask {
-		if cmdOpts.task == "" {
+		if strings.TrimSpace(cmdOpts.task) == "" {
 			return nil, errors.New("missing --task (or provide JSON via --input or stdin)")
 		}
-		payload["task"] = cmdOpts.task
+		payload["task"] = strings.TrimSpace(cmdOpts.task)
 	}
 	if cmdOpts.status != "" {
 		payload["status"] = cmdOpts.status

@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"sort"
@@ -39,13 +40,13 @@ func newDoctorCmd(opts *rootOptions) *cobra.Command {
 				return err
 			}
 			if opts.json {
-				return output.PrintJSON(os.Stdout, report, opts.pretty)
+				if err := output.PrintJSON(os.Stdout, report, opts.pretty); err != nil {
+					return err
+				}
+				return doctorExitError(report)
 			}
 			printDoctor(report)
-			if !report.AppInstalled || !report.ShortcutsCLI {
-				return fmt.Errorf("doctor checks failed")
-			}
-			return nil
+			return doctorExitError(report)
 		},
 	}
 	return cmd
@@ -104,6 +105,19 @@ func runDoctor(ctx context.Context) (doctorReport, error) {
 	}
 
 	return report, nil
+}
+
+func doctorExitError(report doctorReport) error {
+	if !report.AppInstalled {
+		return exitError(ExitCodeAppMissing, errors.New("streaks app not found"))
+	}
+	if !report.ShortcutsCLI {
+		return exitError(ExitCodeShortcutsMissing, errors.New("shortcuts CLI not available"))
+	}
+	if len(report.MissingWrappers) > 0 {
+		return exitError(ExitCodeWrappersMissing, fmt.Errorf("missing %d wrapper shortcuts", len(report.MissingWrappers)))
+	}
+	return nil
 }
 
 func printDoctor(report doctorReport) {

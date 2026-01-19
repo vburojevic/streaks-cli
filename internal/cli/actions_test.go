@@ -55,9 +55,11 @@ func TestBuildActionInputFromStdin(t *testing.T) {
 func TestRunActionCommandUsesWrapper(t *testing.T) {
 	origRun := runShortcut
 	origLoad := loadConfig
+	origExists := shortcutExists
 	defer func() {
 		runShortcut = origRun
 		loadConfig = origLoad
+		shortcutExists = origExists
 	}()
 
 	called := struct {
@@ -69,6 +71,9 @@ func TestRunActionCommandUsesWrapper(t *testing.T) {
 		called.name = name
 		called.input = input
 		return []byte(`{"ok":true}`), nil
+	}
+	shortcutExists = func(ctx context.Context, name string) (bool, error) {
+		return true, nil
 	}
 	loadConfig = func(defs []discovery.ActionDef) (config.Config, bool, error) {
 		return config.Config{WrapperPrefix: "streaks-cli", Wrappers: map[string]string{"task-list": "wrapper"}}, true, nil
