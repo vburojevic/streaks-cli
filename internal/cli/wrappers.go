@@ -55,7 +55,7 @@ func newWrappersListCmd(opts *rootOptions) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List expected wrapper shortcuts",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			entries, err := listWrappers()
 			if err != nil {
 				return err
@@ -87,7 +87,7 @@ func newWrappersSampleCmd(opts *rootOptions) *cobra.Command {
 		Use:   "sample <action-id>",
 		Short: "Print a JSON input template for a wrapper",
 		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			def, err := findActionDef(args[0])
 			if err != nil {
 				return exitError(ExitCodeUsage, err)
@@ -108,7 +108,7 @@ func newWrappersVerifyCmd(opts *rootOptions) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "verify",
 		Short: "Verify wrapper shortcuts return JSON",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			results, err := verifyWrappers(task, status, opts)
 			if err != nil {
 				return err
@@ -158,7 +158,7 @@ func newWrappersDoctorCmd(opts *rootOptions) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "doctor",
 		Short: "Report wrapper readiness (existence + optional JSON validation)",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			cfg, _, err := config.Load(discovery.DefaultActionDefinitions())
 			if err != nil {
 				return err

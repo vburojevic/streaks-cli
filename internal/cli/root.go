@@ -44,7 +44,7 @@ func newRootCmd() *cobra.Command {
 		Version:       version,
 		SilenceErrors: true,
 		SilenceUsage:  true,
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
 			if opts.config != "" {
 				if err := os.Setenv(config.EnvConfigPath, opts.config); err != nil {
 					return err

@@ -16,7 +16,7 @@ func newDiscoverCmd(opts *rootOptions) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "discover",
 		Short: "Print discovered automation capabilities as JSON",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			disc, err := discovery.Discover(context.Background())
 			if err != nil {
 				return exitError(ExitCodeAppMissing, err)

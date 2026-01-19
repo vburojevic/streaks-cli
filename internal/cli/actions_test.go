@@ -72,7 +72,7 @@ func TestRunActionCommandUsesWrapper(t *testing.T) {
 		called.input = input
 		return []byte(`{"ok":true}`), nil
 	}
-	shortcutExists = func(_ context.Context, name string) (bool, error) {
+	shortcutExists = func(_ context.Context, _ string) (bool, error) {
 		return true, nil
 	}
 	loadConfig = func(_ []discovery.ActionDef) (config.Config, bool, error) {

@@ -34,7 +34,7 @@ func newDoctorCmd(opts *rootOptions) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "doctor",
 		Short: "Verify Streaks installation and automation setup",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			report, err := runDoctor(context.Background())
 			if err != nil {
 				return err

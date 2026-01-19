@@ -40,7 +40,7 @@ func addActionCommands(root *cobra.Command, defs []discovery.ActionDef, opts *ro
 		cmd := &cobra.Command{
 			Use:   def.ID,
 			Short: def.Title,
-			RunE: func(cmd *cobra.Command, args []string) error {
+			RunE: func(_ *cobra.Command, _ []string) error {
 				return runActionCommand(context.Background(), def, cmdOpts, opts)
 			},
 		}

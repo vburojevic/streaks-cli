@@ -11,7 +11,7 @@ func newOpenCmd(_ *rootOptions) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "open",
 		Short: "Open Streaks via URL scheme",
-		RunE: func(_ *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			return openURL("streaks://")
 		},
 	}
