@@ -7,7 +7,7 @@ description: "Use when managing Streaks app habits via the Streaks CLI (`st`): d
 
 ## Overview
 
-Use this skill to manage Streaks app habits via the `st` CLI with Shortcuts-based actions and the `streaks://` URL scheme.
+Use this skill to manage Streaks app habits via the `st` CLI with Shortcuts-based actions and the `streaks://` URL scheme. The `st` CLI must be installed to use this skill.
 
 ## Quick start
 
