@@ -19,7 +19,7 @@ func TestNewRootCmdIncludesCommands(t *testing.T) {
 		seen[sub.Name()] = true
 	}
 
-	mustHave := []string{"discover", "doctor", "install", "link", "unlink", "links", "open", "actions", "task-complete", "task-list"}
+	mustHave := []string{"discover", "doctor", "install", "link", "unlink", "links", "help", "open", "actions", "task-complete", "task-list"}
 	for _, name := range mustHave {
 		if !seen[name] {
 			t.Fatalf("missing command: %s", name)

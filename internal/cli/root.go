@@ -70,6 +70,7 @@ func newRootCmd() *cobra.Command {
 	cmd.AddCommand(newLinkCmd(opts))
 	cmd.AddCommand(newUnlinkCmd(opts))
 	cmd.AddCommand(newLinksCmd(opts))
+	cmd.AddCommand(newHelpCmd(cmd, opts))
 	cmd.AddCommand(newOpenCmd(opts))
 	cmd.AddCommand(newActionsCmd(opts))
 
@@ -91,7 +92,11 @@ func Execute() {
 
 func printError(message string, code int) {
 	if isTruthy(os.Getenv(envAgentMode)) {
-		_ = output.PrintJSON(os.Stderr, map[string]any{"error": message, "code": code}, false)
+		payload := map[string]any{"error": message, "code": code}
+		if code == ExitCodeUsage {
+			payload["hint"] = "Run `st help` or `st help <command>` to see usage."
+		}
+		_ = output.PrintJSON(os.Stderr, payload, false)
 		return
 	}
 	fmt.Fprintln(os.Stderr, message)

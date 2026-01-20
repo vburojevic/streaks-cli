@@ -31,6 +31,15 @@ st doctor
 st open
 ```
 
+Need help?
+
+```
+st help
+st help task-list
+```
+
+Agents: use `st --agent help` to get NDJSON help payloads.
+
 If you already have Streaks shortcuts in your library, `st <action>` will use
 them automatically. If not, create Streaks shortcuts in the Shortcuts app and
 re-run `st doctor`.
@@ -103,7 +112,24 @@ Mappings live at `~/.config/streaks-cli/config.json` by default. Override with:
 st --config /path/to/config.json links
 ```
 
-Errors are printed as JSON to stderr in JSON mode, e.g.:
+## Agent quick start
+
+```
+st --agent help
+st --agent discover
+st --agent actions list
+st --agent task-list
+```
+
+If an agent is unsure how to call a command, it should run:
+
+```
+st --agent help <command>
+```
+
+Usage errors in agent mode include a `hint` field pointing to `st help`.
+
+Errors are printed as JSON to stderr in agent mode, e.g.:
 
 ```json
 {"error":"message","code":10}

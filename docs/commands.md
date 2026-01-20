@@ -22,6 +22,7 @@ This is a concise reference for `st`. Run `st --help` or `st <command> --help` f
 - `st link <action-id> --shortcut <name-or-id>` – map an action to a specific shortcut.
 - `st unlink <action-id>` – remove action mapping.
 - `st links` – list mappings.
+- `st help [command]` – show help (agent mode returns NDJSON).
 - `st open` – open Streaks via URL scheme.
 
 ## Actions
