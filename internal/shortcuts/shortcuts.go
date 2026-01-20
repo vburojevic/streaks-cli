@@ -4,10 +4,13 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 )
 
@@ -68,7 +71,7 @@ func Run(ctx context.Context, name string, input []byte) ([]byte, error) {
 
 func RunWithOptions(ctx context.Context, name string, input []byte, opts RunOptions) ([]byte, error) {
 	inputPath := ""
-	outputPath := ""
+	outputDir := ""
 	var err error
 	if input == nil {
 		input = []byte("{}")
@@ -78,12 +81,12 @@ func RunWithOptions(ctx context.Context, name string, input []byte, opts RunOpti
 	}
 	defer os.Remove(inputPath)
 
-	if outputPath, err = tempFilePath("streaks-cli-output-*.json"); err != nil {
+	if outputDir, err = os.MkdirTemp("", "streaks-cli-output-*"); err != nil {
 		return nil, err
 	}
-	defer os.Remove(outputPath)
+	defer os.RemoveAll(outputDir)
 
-	args := []string{"run", name, "--input-path", inputPath, "--output-path", outputPath}
+	args := []string{"run", name, "--input-path", inputPath, "--output-path", outputDir}
 	if strings.TrimSpace(opts.OutputType) != "" {
 		args = append(args, "--output-type", opts.OutputType)
 	}
@@ -93,7 +96,7 @@ func RunWithOptions(ctx context.Context, name string, input []byte, opts RunOpti
 	if err := cmd.Run(); err != nil {
 		return nil, fmt.Errorf("shortcuts run failed: %w: %s", err, strings.TrimSpace(stderr.String()))
 	}
-	return os.ReadFile(outputPath)
+	return readOutputDir(outputDir)
 }
 
 func writeTempFile(pattern string, data []byte) (string, error) {
@@ -108,14 +111,42 @@ func writeTempFile(pattern string, data []byte) (string, error) {
 	return f.Name(), nil
 }
 
-func tempFilePath(pattern string) (string, error) {
-	f, err := os.CreateTemp("", pattern)
+func readOutputDir(dir string) ([]byte, error) {
+	entries, err := os.ReadDir(dir)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	path := f.Name()
-	if err := f.Close(); err != nil {
-		return "", err
+	files := make([]string, 0, len(entries))
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		name := entry.Name()
+		if strings.HasPrefix(name, ".") {
+			continue
+		}
+		files = append(files, name)
 	}
-	return path, nil
+	if len(files) == 0 {
+		return []byte{}, nil
+	}
+	sort.Strings(files)
+	if len(files) == 1 {
+		return os.ReadFile(filepath.Join(dir, files[0]))
+	}
+
+	items := make([]any, 0, len(files))
+	for _, name := range files {
+		data, err := os.ReadFile(filepath.Join(dir, name))
+		if err != nil {
+			return nil, err
+		}
+		var payload any
+		if err := json.Unmarshal(data, &payload); err == nil {
+			items = append(items, payload)
+			continue
+		}
+		items = append(items, strings.TrimSpace(string(data)))
+	}
+	return json.Marshal(items)
 }

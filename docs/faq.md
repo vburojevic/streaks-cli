@@ -31,6 +31,7 @@
 - Build shortcuts that return a Dictionary for structured output.
 - Use `--agent` to get a stable JSON wrapper for action outputs.
 - If you need JSON output from Shortcuts, use `--shortcuts-output public.json`.
+- If a shortcut outputs multiple files, `st` aggregates them into a JSON array.
 
 ## Homebrew install issues
 - Ensure the tap is added: `brew tap vburojevic/tap`.

@@ -110,6 +110,10 @@ agent mode wraps it as:
 {"raw":"...","format":"text","shortcut":"All Tasks"}
 ```
 
+If a shortcut produces multiple output files, `st` aggregates them into a JSON
+array. Each element is parsed as JSON when possible, otherwise returned as a
+string.
+
 With `--agent`, action output is wrapped in a stable envelope:
 
 ```json
