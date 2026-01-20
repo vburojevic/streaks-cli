@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"streaks-cli/internal/config"
 	"streaks-cli/internal/discovery"
 	"streaks-cli/internal/output"
 	"streaks-cli/internal/shortcuts"
@@ -36,19 +37,13 @@ func newDoctorCmd(opts *rootOptions) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			if opts.isJSON() {
-				if err := output.PrintJSON(os.Stdout, report, opts.pretty); err != nil {
+			if opts.isAgent() {
+				if err := output.PrintJSON(os.Stdout, report, false); err != nil {
 					return err
 				}
 				return doctorExitError(report)
 			}
 			if opts.noOutput {
-				return doctorExitError(report)
-			}
-			if opts.isPlain() {
-				if !opts.quiet || doctorExitError(report) != nil {
-					printDoctorPlain(report)
-				}
 				return doctorExitError(report)
 			}
 			if !opts.quiet || doctorExitError(report) != nil {
@@ -91,7 +86,11 @@ func runDoctor(ctx context.Context) (doctorReport, error) {
 		}
 		report.ShortcutCount = len(list)
 		if discErr == nil {
-			available, missing := shortcutCoverage(discovery.DefaultActionDefinitions(), disc, list)
+			cfg, _, cfgErr := config.Load()
+			if cfgErr != nil {
+				report.Warnings = append(report.Warnings, cfgErr.Error())
+			}
+			available, missing := shortcutCoverage(discovery.DefaultActionDefinitions(), disc, list, cfg.Mappings)
 			report.ShortcutActionsAvailable = available
 			report.ShortcutActionsMissing = missing
 		}

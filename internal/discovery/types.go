@@ -10,8 +10,9 @@ type AppInfo struct {
 }
 
 type AppIntentKey struct {
-	Key   string `json:"key"`
-	Value string `json:"value,omitempty"`
+	Key    string `json:"key"`
+	Value  string `json:"value,omitempty"`
+	Locale string `json:"locale,omitempty"`
 }
 
 type Action struct {

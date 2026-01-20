@@ -3,18 +3,26 @@ package cli
 import (
 	"sort"
 
+	"streaks-cli/internal/config"
 	"streaks-cli/internal/discovery"
 	"streaks-cli/internal/shortcuts"
 )
 
-func shortcutCoverage(defs []discovery.ActionDef, disc discovery.Discovery, list []shortcuts.Shortcut) ([]string, []string) {
+func shortcutCoverage(defs []discovery.ActionDef, disc discovery.Discovery, list []shortcuts.Shortcut, mappings map[string]config.ShortcutRef) ([]string, []string) {
 	available := make([]string, 0)
 	missing := make([]string, 0)
 	for _, def := range defs {
 		if def.Transport != discovery.TransportShortcuts {
 			continue
 		}
-		candidates := discovery.ActionShortcutCandidates(def, disc.App, disc.AppIntentKeys, disc.AppShortcutPhrases, "")
+		if ref, ok := mappings[def.ID]; ok {
+			candidate := shortcutLabel(ref)
+			if candidate != "" && matchShortcutName(list, []string{candidate}) != "" {
+				available = append(available, def.ID)
+				continue
+			}
+		}
+		candidates := actionCandidatesFromDiscovery(def, disc, "")
 		if len(candidates) == 0 {
 			continue
 		}

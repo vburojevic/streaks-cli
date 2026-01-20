@@ -9,6 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"streaks-cli/internal/config"
 	"streaks-cli/internal/discovery"
 	"streaks-cli/internal/output"
 )
@@ -22,9 +23,10 @@ type actionInfo struct {
 }
 
 type actionDetail struct {
-	Action             actionInfo     `json:"action"`
-	Sample             map[string]any `json:"sample_input"`
-	ShortcutCandidates []string       `json:"shortcut_candidates,omitempty"`
+	Action             actionInfo          `json:"action"`
+	Sample             map[string]any      `json:"sample_input"`
+	ShortcutCandidates []string            `json:"shortcut_candidates,omitempty"`
+	MappedShortcut     *config.ShortcutRef `json:"mapped_shortcut,omitempty"`
 }
 
 func newActionsCmd(opts *rootOptions) *cobra.Command {
@@ -56,15 +58,14 @@ func newActionsListCmd(opts *rootOptions) *cobra.Command {
 				})
 			}
 			sort.Slice(infos, func(i, j int) bool { return infos[i].ID < infos[j].ID })
-			if opts.isJSON() {
-				return output.PrintJSON(os.Stdout, infos, opts.pretty)
-			}
 			if opts.noOutput {
 				return nil
 			}
-			if opts.isPlain() {
+			if opts.isAgent() {
 				for _, info := range infos {
-					fmt.Printf("%s\t%t\n", info.ID, info.RequiresTask)
+					if err := output.PrintJSON(os.Stdout, info, false); err != nil {
+						return err
+					}
 				}
 				return nil
 			}
@@ -94,7 +95,14 @@ func newActionsDescribeCmd(opts *rootOptions) *cobra.Command {
 			}
 			var shortcutCandidates []string
 			if disc, err := discover(context.Background()); err == nil {
-				shortcutCandidates = discovery.ActionShortcutCandidates(def, disc.App, disc.AppIntentKeys, disc.AppShortcutPhrases, task)
+				shortcutCandidates = actionCandidatesFromDiscovery(def, disc, task)
+			}
+			var mapped *config.ShortcutRef
+			if cfg, _, err := config.Load(); err == nil {
+				if ref, ok := cfg.Mappings[def.ID]; ok {
+					copy := ref
+					mapped = &copy
+				}
 			}
 			detail := actionDetail{
 				Action: actionInfo{
@@ -106,14 +114,12 @@ func newActionsDescribeCmd(opts *rootOptions) *cobra.Command {
 				},
 				Sample:             samplePayload(def),
 				ShortcutCandidates: shortcutCandidates,
-			}
-			if opts.isJSON() {
-				return output.PrintJSON(os.Stdout, detail, opts.pretty)
+				MappedShortcut:     mapped,
 			}
 			if opts.noOutput {
 				return nil
 			}
-			if opts.isPlain() {
+			if opts.isAgent() {
 				return output.PrintJSON(os.Stdout, detail, false)
 			}
 			fmt.Printf("ID: %s\nTitle: %s\n", detail.Action.ID, detail.Action.Title)
@@ -122,6 +128,9 @@ func newActionsDescribeCmd(opts *rootOptions) *cobra.Command {
 			}
 			if len(detail.ShortcutCandidates) > 0 {
 				fmt.Printf("Shortcut candidates: %s\n", strings.Join(detail.ShortcutCandidates, ", "))
+			}
+			if detail.MappedShortcut != nil {
+				fmt.Printf("Mapped shortcut: %s\n", shortcutLabel(*detail.MappedShortcut))
 			}
 			return nil
 		},

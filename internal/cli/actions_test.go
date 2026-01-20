@@ -6,8 +6,10 @@ import (
 	"encoding/json"
 	"io"
 	"os"
+	"path/filepath"
 	"testing"
 
+	"streaks-cli/internal/config"
 	"streaks-cli/internal/discovery"
 	"streaks-cli/internal/shortcuts"
 )
@@ -75,9 +77,10 @@ func TestRunActionCommandUsesExplicitShortcut(t *testing.T) {
 		return nil, nil
 	}
 
-	opts := &rootOptions{json: true, pretty: false}
+	opts := &rootOptions{agent: true}
 	def := discovery.ActionDef{ID: "task-list", Title: "List tasks", Transport: discovery.TransportShortcuts}
 
+	t.Setenv("STREAKS_CLI_CONFIG", filepath.Join(t.TempDir(), "config.json"))
 	origStdout := os.Stdout
 	r, w, _ := os.Pipe()
 	os.Stdout = w
@@ -120,7 +123,7 @@ func TestRunActionCommandUsesDirectShortcut(t *testing.T) {
 		return discovery.Discovery{
 			App: discovery.AppInfo{Name: "Streaks"},
 			AppIntentKeys: []discovery.AppIntentKey{
-				{Key: "AppIntent.TaskList.AllTasks", Value: "All Tasks"},
+				{Key: "AppIntent.TaskList.AllTasks", Value: "All Tasks", Locale: "en"},
 			},
 		}, nil
 	}
@@ -128,10 +131,60 @@ func TestRunActionCommandUsesDirectShortcut(t *testing.T) {
 		return []shortcuts.Shortcut{{Name: "All Tasks"}}, nil
 	}
 
-	opts := &rootOptions{json: true, pretty: false}
+	opts := &rootOptions{agent: true}
+	def := discovery.ActionDef{ID: "task-list", Title: "List tasks", Transport: discovery.TransportShortcuts, Keys: []string{"AppIntent.TaskList.AllTasks"}}
+
+	t.Setenv("STREAKS_CLI_CONFIG", filepath.Join(t.TempDir(), "config.json"))
+	if err := runActionCommand(context.Background(), def, &actionCmdOptions{}, opts); err != nil {
+		t.Fatalf("runActionCommand: %v", err)
+	}
+}
+
+func TestRunActionCommandUsesMapping(t *testing.T) {
+	origRun := runShortcut
+	origDiscover := discover
+	origList := listShortcuts
+	defer func() {
+		runShortcut = origRun
+		discover = origDiscover
+		listShortcuts = origList
+	}()
+
+	called := ""
+	runShortcut = func(_ context.Context, name string, _ []byte, _ shortcuts.RunOptions) ([]byte, error) {
+		called = name
+		return []byte(`{"ok":true}`), nil
+	}
+	discover = func(_ context.Context) (discovery.Discovery, error) {
+		return discovery.Discovery{
+			App: discovery.AppInfo{Name: "Streaks"},
+			AppIntentKeys: []discovery.AppIntentKey{
+				{Key: "AppIntent.TaskList.AllTasks", Value: "All Tasks", Locale: "en"},
+			},
+		}, nil
+	}
+	listShortcuts = func(_ context.Context) ([]shortcuts.Shortcut, error) {
+		return []shortcuts.Shortcut{{Name: "All Tasks"}}, nil
+	}
+
+	path := filepath.Join(t.TempDir(), "config.json")
+	t.Setenv("STREAKS_CLI_CONFIG", path)
+	_, err := config.Write(config.Config{
+		Mappings: map[string]config.ShortcutRef{
+			"task-list": {Name: "Mapped Shortcut"},
+		},
+	})
+	if err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+
+	opts := &rootOptions{agent: true}
 	def := discovery.ActionDef{ID: "task-list", Title: "List tasks", Transport: discovery.TransportShortcuts, Keys: []string{"AppIntent.TaskList.AllTasks"}}
 
 	if err := runActionCommand(context.Background(), def, &actionCmdOptions{}, opts); err != nil {
 		t.Fatalf("runActionCommand: %v", err)
+	}
+	if called != "Mapped Shortcut" {
+		t.Fatalf("expected mapped shortcut, got %s", called)
 	}
 }

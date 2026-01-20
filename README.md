@@ -1,6 +1,8 @@
 # streaks-cli
 
-A macOS command-line interface for the Streaks (Crunchy Bagel) app. The command name is `st`.
+A macOS command-line interface for the [Streaks](https://streaksapp.com) app. The command name is `st`.
+
+Fast, automation-first workflows for Shortcuts-backed Streaks actions, with a clean NDJSON agent mode.
 
 This CLI integrates with Streaks using **official automation surfaces only**:
 Shortcuts actions (App Intents) and the `streaks://` URL scheme.
@@ -33,6 +35,13 @@ If you already have Streaks shortcuts in your library, `st <action>` will use
 them automatically. If not, create Streaks shortcuts in the Shortcuts app and
 re-run `st doctor`.
 
+If your shortcut names differ from the defaults, map them once:
+
+```
+st link task-list --shortcut "My Tasks"
+st links
+```
+
 ## Testing
 
 ```
@@ -52,23 +61,47 @@ st task-list --shortcut "All Tasks"
 # Agent-friendly JSON
 st --agent discover
 
-# Plain output for scripts
-st --output plain actions list
+# Agent NDJSON
+st --agent actions list
 
 # Dry-run to see shortcut payload
 st task-complete --task "Read" --dry-run
 ```
 
+## Wrapper shortcut import (optional)
+
+If you have exported wrapper `.shortcut` files locally (or use the bundled ones
+in `./shortcuts`), import them in one step:
+
+```
+st install --import
+```
+
+Use `--from-dir` to point at a custom directory of `.shortcut` files.
+
+Wrapper shortcut names are used exactly as file names. Helper shortcuts like
+"Get Task Object" and "Get Task Details" are dependencies and not mapped to
+CLI actions.
+
 ## Output modes
 
+- Default: human-readable output for meta commands, raw shortcut output for actions.
+- Agent mode: NDJSON (`--agent` or `STREAKS_CLI_AGENT=1`).
+- `--no-output` suppresses all output (exit code only).
+
+Default Shortcuts output is plain text. If you need JSON, set:
+
 ```
-st --output human   # default
-st --output json    # structured output
-st --output plain   # line-based output
+st --shortcuts-output public.json task-list
 ```
 
-`--json` is equivalent to `--output json`.
-`--no-output` suppresses all output (exit code only).
+## Config
+
+Mappings live at `~/.config/streaks-cli/config.json` by default. Override with:
+
+```
+st --config /path/to/config.json links
+```
 
 Errors are printed as JSON to stderr in JSON mode, e.g.:
 
@@ -78,13 +111,15 @@ Errors are printed as JSON to stderr in JSON mode, e.g.:
 
 ## Agent usage
 
-Use `--agent` or `STREAKS_CLI_AGENT=1` for deterministic JSON output:
+Use `--agent` or `STREAKS_CLI_AGENT=1` for NDJSON output:
 
 ```
 st --agent doctor
 st --agent actions list
-st --agent actions list
+st --agent task-list
 ```
+
+Action commands emit a stable JSON envelope in agent mode.
 
 ## Command reference
 

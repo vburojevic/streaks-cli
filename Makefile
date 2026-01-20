@@ -1,10 +1,12 @@
 BIN=bin/st
+ROOT_BIN=st
 
 .PHONY: build test lint release-dry integration smoke
 
 build:
 	mkdir -p bin
 	go build -o $(BIN) ./cmd/streaks-cli
+	cp $(BIN) $(ROOT_BIN)
 
 test:
 	go test ./...

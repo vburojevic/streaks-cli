@@ -22,16 +22,16 @@ func newDiscoverCmd(opts *rootOptions) *cobra.Command {
 				return exitError(ExitCodeAppMissing, err)
 			}
 			if markdown {
-				if opts.isJSON() {
-					return exitError(ExitCodeUsage, fmt.Errorf("--markdown is incompatible with JSON output"))
+				if opts.isAgent() {
+					return exitError(ExitCodeUsage, fmt.Errorf("--markdown is incompatible with agent output"))
 				}
 				_, err := os.Stdout.WriteString(formatDiscoverMarkdown(disc))
 				return err
 			}
-			if opts.isPlain() {
+			if opts.isAgent() {
 				return output.PrintJSON(os.Stdout, disc, false)
 			}
-			return output.PrintJSON(os.Stdout, disc, opts.pretty)
+			return output.PrintJSON(os.Stdout, disc, false)
 		},
 	}
 	cmd.Flags().BoolVar(&markdown, "markdown", false, "Output discovery report as Markdown")

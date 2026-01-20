@@ -103,15 +103,6 @@ func DefaultActionDefinitions() []ActionDef {
 			},
 		},
 		{
-			ID:           "resume",
-			Title:        "Resume tasks",
-			Transport:    TransportShortcuts,
-			RequiresTask: false,
-			Keys: []string{
-				"AppIntent.Resume.Title",
-			},
-		},
-		{
 			ID:           "export-all",
 			Title:        "Export all data",
 			Transport:    TransportShortcuts,

@@ -153,22 +153,38 @@ func ReadAppInfo(ctx context.Context, appPath string) (AppInfo, []string, []stri
 }
 
 func ReadAppIntentKeys(ctx context.Context, resourcesPath string) ([]AppIntentKey, error) {
-	localizable := filepath.Join(resourcesPath, "en.lproj", "Localizable.strings")
-	data, err := readPlistAsJSON(ctx, localizable)
-	if err != nil {
-		return nil, err
-	}
-
-	var values map[string]string
-	if err := json.Unmarshal(data, &values); err != nil {
-		return nil, err
-	}
-
 	keys := make([]AppIntentKey, 0)
-	for key, value := range values {
-		if strings.HasPrefix(key, "AppIntent.") {
-			keys = append(keys, AppIntentKey{Key: key, Value: value})
+	err := filepath.WalkDir(resourcesPath, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
 		}
+		if d.IsDir() {
+			return nil
+		}
+		if filepath.Base(path) != "Localizable.strings" {
+			return nil
+		}
+		locale := strings.TrimSuffix(filepath.Base(filepath.Dir(path)), ".lproj")
+		if locale == "" {
+			return nil
+		}
+		data, err := readPlistAsJSON(ctx, path)
+		if err != nil {
+			return nil
+		}
+		var values map[string]string
+		if err := json.Unmarshal(data, &values); err != nil {
+			return nil
+		}
+		for key, value := range values {
+			if strings.HasPrefix(key, "AppIntent.") {
+				keys = append(keys, AppIntentKey{Key: key, Value: value, Locale: locale})
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return keys, err
 	}
 	return keys, nil
 }
@@ -218,8 +234,13 @@ func readPlistAsJSON(ctx context.Context, path string) ([]byte, error) {
 }
 
 func extractKeys(keys []AppIntentKey) []string {
+	seen := make(map[string]struct{}, len(keys))
 	result := make([]string, 0, len(keys))
 	for _, k := range keys {
+		if _, ok := seen[k.Key]; ok {
+			continue
+		}
+		seen[k.Key] = struct{}{}
 		result = append(result, k.Key)
 	}
 	return result

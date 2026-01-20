@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"streaks-cli/internal/config"
 	"streaks-cli/internal/discovery"
 	"streaks-cli/internal/output"
 )
@@ -15,77 +16,60 @@ import (
 var version = "dev"
 
 type rootOptions struct {
-	json      bool
-	pretty    bool
-	agent     bool
-	output    string
-	plain     bool
-	quiet     bool
-	verbose   bool
-	noOutput  bool
-	timeout   time.Duration
-	retries   int
-	retryWait time.Duration
+	agent           bool
+	quiet           bool
+	verbose         bool
+	noOutput        bool
+	timeout         time.Duration
+	retries         int
+	retryWait       time.Duration
+	configPath      string
+	shortcutsOutput string
 }
 
 const envDisableDiscovery = "STREAKS_CLI_DISABLE_DISCOVERY"
 const envAgentMode = "STREAKS_CLI_AGENT"
-const envJSONOutput = "STREAKS_CLI_JSON"
-const envOutputMode = "STREAKS_CLI_OUTPUT"
+const envShortcutsOutput = "STREAKS_CLI_SHORTCUTS_OUTPUT"
 
 func newRootCmd() *cobra.Command {
 	opts := &rootOptions{}
 	cmd := &cobra.Command{
 		Use:           "st",
 		Short:         "CLI for Streaks (Crunchy Bagel)",
-		Long:          "CLI for Streaks (Crunchy Bagel).\n\nFor automation/agents, use --agent or --json for structured output.",
+		Long:          "CLI for Streaks (Crunchy Bagel).\n\nFor automation/agents, use --agent for NDJSON output.",
 		Version:       version,
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
-			if opts.output == "" {
-				if env := os.Getenv(envOutputMode); env != "" {
-					opts.output = env
+			if opts.configPath != "" {
+				_ = os.Setenv(config.EnvConfigPath, opts.configPath)
+			}
+			if opts.shortcutsOutput == "" {
+				if env := os.Getenv(envShortcutsOutput); env != "" {
+					opts.shortcutsOutput = env
 				}
 			}
-			if opts.agent || isTruthy(os.Getenv(envAgentMode)) {
-				opts.json = true
-				opts.pretty = false
-			}
-			if opts.plain {
-				opts.output = string(outputPlain)
-			}
-			if opts.json {
-				opts.output = string(outputJSON)
-			}
-			mode, err := parseOutputMode(opts.output)
-			if err != nil {
-				return exitError(ExitCodeUsage, err)
-			}
-			if mode == outputJSON {
-				_ = os.Setenv(envJSONOutput, "1")
-			} else {
-				_ = os.Unsetenv(envJSONOutput)
-			}
+			opts.agent = opts.agent || isTruthy(os.Getenv(envAgentMode))
 			return nil
 		},
 	}
 
-	cmd.PersistentFlags().BoolVar(&opts.json, "json", false, "Output JSON when supported")
-	cmd.PersistentFlags().StringVar(&opts.output, "output", "", "Output mode: human, json, plain")
-	cmd.PersistentFlags().BoolVar(&opts.plain, "plain", false, "Plain output (equivalent to --output plain)")
-	cmd.PersistentFlags().BoolVar(&opts.pretty, "pretty", isTTY(os.Stdout), "Pretty-print JSON output")
-	cmd.PersistentFlags().BoolVar(&opts.agent, "agent", false, "Agent-friendly mode (implies --json, disables pretty JSON)")
+	cmd.PersistentFlags().BoolVar(&opts.agent, "agent", false, "Agent-friendly mode (NDJSON output)")
 	cmd.PersistentFlags().BoolVar(&opts.quiet, "quiet", false, "Suppress non-essential output")
 	cmd.PersistentFlags().BoolVar(&opts.verbose, "verbose", false, "Verbose output")
 	cmd.PersistentFlags().BoolVar(&opts.noOutput, "no-output", false, "Suppress all output (exit code only)")
 	cmd.PersistentFlags().DurationVar(&opts.timeout, "timeout", 30*time.Second, "Timeout for Shortcuts runs")
 	cmd.PersistentFlags().IntVar(&opts.retries, "retries", 0, "Retry failed Shortcuts runs")
 	cmd.PersistentFlags().DurationVar(&opts.retryWait, "retry-delay", time.Second, "Initial delay between retries")
+	cmd.PersistentFlags().StringVar(&opts.shortcutsOutput, "shortcuts-output", "public.plain-text", "Shortcuts output type (UTI), e.g. public.plain-text or public.json")
+	cmd.PersistentFlags().StringVar(&opts.configPath, "config", "", "Path to config file (default: ~/.config/streaks-cli/config.json)")
 
 	cmd.AddCommand(newDiscoverCmd(opts))
 	cmd.AddCommand(newDoctorCmd(opts))
 	cmd.AddCommand(newInstallCmd(opts))
+	cmd.AddCommand(newLinkCmd(opts))
+	cmd.AddCommand(newUnlinkCmd(opts))
+	cmd.AddCommand(newLinksCmd(opts))
 	cmd.AddCommand(newOpenCmd(opts))
 	cmd.AddCommand(newActionsCmd(opts))
 
@@ -97,20 +81,20 @@ func newRootCmd() *cobra.Command {
 func Execute() {
 	if err := newRootCmd().Execute(); err != nil {
 		if code, inner := exitCodeFromError(err); code != 0 {
-			if os.Getenv(envJSONOutput) == "1" {
-				_ = output.PrintJSON(os.Stderr, map[string]any{"error": inner.Error(), "code": code}, false)
-			} else {
-				fmt.Fprintln(os.Stderr, inner.Error())
-			}
+			printError(inner.Error(), code)
 			os.Exit(code)
 		}
-		if os.Getenv(envJSONOutput) == "1" {
-			_ = output.PrintJSON(os.Stderr, map[string]any{"error": err.Error(), "code": 1}, false)
-		} else {
-			fmt.Fprintln(os.Stderr, err.Error())
-		}
+		printError(err.Error(), 1)
 		os.Exit(1)
 	}
+}
+
+func printError(message string, code int) {
+	if isTruthy(os.Getenv(envAgentMode)) {
+		_ = output.PrintJSON(os.Stderr, map[string]any{"error": message, "code": code}, false)
+		return
+	}
+	fmt.Fprintln(os.Stderr, message)
 }
 
 func filterDefs(defs []discovery.ActionDef, present map[string]discovery.Action) []discovery.ActionDef {

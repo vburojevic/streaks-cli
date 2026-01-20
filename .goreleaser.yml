@@ -27,6 +27,7 @@ archives:
       - LICENSE
       - README.md
       - docs/*
+      - shortcuts/*
 
 brews:
   - name: streaks-cli

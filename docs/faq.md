@@ -10,6 +10,8 @@
   Shortcuts still requires the shortcut to exist in your library.
 - Re-run: `st doctor` to verify.
 - You can also run a specific shortcut by name: `st <action> --shortcut "Name"`.
+- If your shortcut names differ from the defaults, map them once:
+  `st link task-list --shortcut "My Tasks"`.
 
 ## Shortcuts permission prompts
 - The first run may prompt for automation permissions.
@@ -20,13 +22,15 @@
 - Update action matching if Streaks adds new actions.
 
 ## Output formats
-- Use `--output json` or `--agent` for machine-readable output.
-- Use `--output plain` for stable line-based output.
+- Use `--agent` for machine-readable NDJSON output.
+- Default output is human-friendly for meta commands and raw shortcut output for actions.
 - Use `--no-output` when only exit codes matter.
 
 ## JSON output is not structured
 - Direct shortcuts may return plain text.
-- Use `--output json` to wrap text in a JSON object, or build shortcuts that return a Dictionary.
+- Build shortcuts that return a Dictionary for structured output.
+- Use `--agent` to get a stable JSON wrapper for action outputs.
+- If you need JSON output from Shortcuts, use `--shortcuts-output public.json`.
 
 ## Homebrew install issues
 - Ensure the tap is added: `brew tap vburojevic/tap`.

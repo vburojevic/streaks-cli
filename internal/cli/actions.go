@@ -11,6 +11,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"streaks-cli/internal/config"
 	"streaks-cli/internal/discovery"
 	"streaks-cli/internal/output"
 	"streaks-cli/internal/shortcuts"
@@ -65,7 +66,16 @@ func runActionCommand(ctx context.Context, def discovery.ActionDef, cmdOpts *act
 		return exitError(ExitCodeUsage, err)
 	}
 	if cmdOpts.shortcut != "" {
-		return runNamedShortcut(ctx, cmdOpts.shortcut, input, cmdOpts, opts)
+		return runNamedShortcut(ctx, def.ID, cmdOpts.shortcut, input, cmdOpts, opts)
+	}
+
+	if mapped, ok, err := resolveActionMapping(def.ID); err != nil {
+		return err
+	} else if ok {
+		if cmdOpts.dryRun {
+			return printDryRun(opts, mapped, input)
+		}
+		return runNamedShortcut(ctx, def.ID, mapped, input, cmdOpts, opts)
 	}
 
 	taskForShortcut := cmdOpts.task
@@ -87,7 +97,7 @@ func runActionCommand(ctx context.Context, def discovery.ActionDef, cmdOpts *act
 			if cmdOpts.dryRun {
 				return printDryRun(opts, match, input)
 			}
-			return runNamedShortcut(ctx, match, input, cmdOpts, opts)
+			return runNamedShortcut(ctx, def.ID, match, input, cmdOpts, opts)
 		}
 	}
 
@@ -102,8 +112,30 @@ func actionCandidates(ctx context.Context, def discovery.ActionDef, task string)
 	if err != nil {
 		return nil, exitError(ExitCodeAppMissing, err)
 	}
+	return actionCandidatesFromDiscovery(def, disc, task), nil
+}
+
+func resolveActionMapping(actionID string) (string, bool, error) {
+	cfg, _, err := config.Load()
+	if err != nil {
+		return "", false, err
+	}
+	ref, ok := cfg.Mappings[actionID]
+	if !ok {
+		return "", false, nil
+	}
+	if ref.Name != "" {
+		return ref.Name, true, nil
+	}
+	if ref.ID != "" {
+		return ref.ID, true, nil
+	}
+	return "", false, nil
+}
+
+func actionCandidatesFromDiscovery(def discovery.ActionDef, disc discovery.Discovery, task string) []string {
 	candidates := discovery.ActionShortcutCandidates(def, disc.App, disc.AppIntentKeys, disc.AppShortcutPhrases, task)
-	return candidates, nil
+	return addWrapperCandidates(def.ID, candidates)
 }
 
 func buildActionInput(def discovery.ActionDef, cmdOpts *actionCmdOptions) ([]byte, error) {
@@ -161,13 +193,15 @@ func printDryRun(opts *rootOptions, shortcut string, input []byte) error {
 		"shortcut": shortcut,
 	}
 	if input != nil {
-		payload["input"] = json.RawMessage(input)
+		var parsed any
+		if err := json.Unmarshal(input, &parsed); err == nil {
+			payload["input"] = parsed
+		} else {
+			payload["input"] = string(input)
+		}
 	}
 	if opts != nil {
-		if opts.isJSON() {
-			return output.PrintJSON(os.Stdout, payload, opts.pretty)
-		}
-		if opts.isPlain() {
+		if opts.isAgent() {
 			return output.PrintJSON(os.Stdout, payload, false)
 		}
 	}

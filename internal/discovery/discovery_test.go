@@ -86,7 +86,7 @@ func TestReadAppIntentKeys(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ReadAppIntentKeys: %v", err)
 	}
-	if len(keys) != 1 || keys[0].Key != "AppIntent.TaskList.AllTasks" {
+	if len(keys) != 1 || keys[0].Key != "AppIntent.TaskList.AllTasks" || keys[0].Locale != "en" {
 		t.Fatalf("unexpected keys: %v", keys)
 	}
 }
@@ -135,7 +135,7 @@ func TestReadAppShortcutPhrases(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ReadAppShortcutPhrases: %v", err)
 	}
-	if len(keys) != 1 || keys[0].Value == "" {
+	if len(keys) != 1 || keys[0].Value == "" || keys[0].Locale != "fr" {
 		t.Fatalf("unexpected phrases: %v", keys)
 	}
 }
@@ -148,8 +148,9 @@ func TestActionShortcutCandidates(t *testing.T) {
 		Keys:      []string{"AppIntent.TaskList.AllTasks"},
 	}
 	app := AppInfo{Name: "Streaks"}
-	intentKeys := []AppIntentKey{{Key: "AppIntent.TaskList.AllTasks", Value: "All Tasks"}}
-	phrases := []AppIntentKey{{Key: "#!SET#!_AppIntent.TaskList.ListOf${applicationName}[0]", Value: "List of ${applicationName}"}}
+	t.Setenv("LANG", "en_US.UTF-8")
+	intentKeys := []AppIntentKey{{Key: "AppIntent.TaskList.AllTasks", Value: "All Tasks", Locale: "en"}}
+	phrases := []AppIntentKey{{Key: "#!SET#!_AppIntent.TaskList.ListOf${applicationName}[0]", Value: "List of ${applicationName}", Locale: "en"}}
 
 	candidates := ActionShortcutCandidates(def, app, intentKeys, phrases, "")
 	joined := strings.Join(candidates, "|")

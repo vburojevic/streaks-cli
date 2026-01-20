@@ -26,6 +26,10 @@ shortcuts via the Shortcuts app (e.g., from Streaks “Add Shortcut” buttons).
 listed, but Shortcuts can only execute shortcuts that actually exist in your
 library.
 
+Wrapper shortcut names are used exactly as file names. Helper shortcuts like
+"Get Task Object" and "Get Task Details" are dependencies and not mapped to CLI
+actions.
+
 To see candidates for a specific action:
 
 ```
@@ -37,6 +41,16 @@ Run a specific shortcut explicitly:
 ```
 st task-list --shortcut "All Tasks"
 ```
+
+If your shortcut names differ from the default candidates, link them once:
+
+```
+st link task-list --shortcut "My Streaks Tasks"
+st links
+```
+
+Mappings are stored in `~/.config/streaks-cli/config.json` (override with
+`--config` or `STREAKS_CLI_CONFIG`).
 
 ## Install
 
@@ -52,5 +66,16 @@ After creating shortcuts, verify:
 ```
 st doctor
 ```
+
+## Optional: Import wrapper shortcuts
+
+If `.shortcut` wrapper files are available locally (for example in `./shortcuts`),
+you can open them for import in one step:
+
+```
+st install --import
+```
+
+Use `--from-dir` to point at a custom directory.
 
 See `docs/commands.md` for more detail.

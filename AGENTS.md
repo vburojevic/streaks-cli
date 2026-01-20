@@ -4,10 +4,12 @@
 - `cmd/streaks-cli/`: CLI entrypoint.
 - `internal/cli/`: Cobra commands and exit-code handling.
 - `internal/discovery/`: App bundle discovery (Info.plist + Localizable.strings).
+- `internal/config/`: Config persistence for action-to-shortcut mappings.
 - `internal/shortcuts/`: Shortcuts CLI integration.
 - `internal/output/`: JSON helpers.
 - `internal/xcallback/`: Stub for future x-callback URL support.
 - `docs/`: `setup.md`, `release.md`, `faq.md`, `schema.md`.
+- `shortcuts/`: Exported `.shortcut` wrapper files (optional).
 - `.github/workflows/`: CI workflows.
 
 ## Build, Test, and Development Commands
@@ -36,9 +38,9 @@
 ## Security & Configuration Notes
 - Do not read sandboxed databases or reverse engineer binaries.
 - Automation uses official surfaces only (Shortcuts, URL scheme).
-- Agent mode: `--agent` or `STREAKS_CLI_AGENT=1` for JSON output.
-- Output modes: `--output human|json|plain`.
-- Action execution requires existing Streaks shortcuts; use `--shortcut` to target one.
+- Agent mode: `--agent` or `STREAKS_CLI_AGENT=1` for NDJSON output (action envelope).
+- Action execution requires existing Streaks shortcuts; use `--shortcut` or `st link` mappings.
+- Config path: `~/.config/streaks-cli/config.json` (override with `--config` or `STREAKS_CLI_CONFIG`).
 
 ## Release Workflow
 - Tag `vX.Y.Z`, push the tag.
