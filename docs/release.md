@@ -8,18 +8,39 @@ This project uses GoReleaser to build macOS binaries and update the Homebrew tap
 
 ## Steps
 
-1. Ensure tests pass:
+1. Ensure tests pass and the working tree is clean:
    ```
+   git status --short
    go test ./...
    ```
-2. Tag a release:
+2. Commit all changes for the release.
+3. Tag a release:
    ```
    git tag -a vX.Y.Z -m "vX.Y.Z"
    git push origin vX.Y.Z
    ```
-3. GitHub Actions runs the `release` workflow and publishes:
+4. Push `main` (if needed):
+   ```
+   git push origin main
+   ```
+5. GitHub Actions runs the `release` workflow and publishes:
    - GitHub release artifacts (darwin amd64/arm64)
    - Updated Homebrew formula in the tap
+
+6. Verify the release:
+   ```
+   gh release view vX.Y.Z
+   gh run list --limit 5
+   ```
+
+7. Verify the Homebrew tap points at the new version. If it didn’t update,
+   update it manually:
+   ```
+   curl -L -o /tmp/streaks-cli-vX.Y.Z.tar.gz \
+     https://github.com/vburojevic/streaks-cli/archive/refs/tags/vX.Y.Z.tar.gz
+   shasum -a 256 /tmp/streaks-cli-vX.Y.Z.tar.gz
+   # Update Formula/streaks-cli.rb in vburojevic/homebrew-tap with the new url+sha.
+   ```
 
 ## Local Dry Run
 
