@@ -39,6 +39,10 @@ brews:
     homepage: https://github.com/vburojevic/streaks-cli
     description: CLI for Streaks (Crunchy Bagel)
     license: MIT
+    install: |
+      bin.install "st"
+      pkgshare.install Dir["shortcuts/*.shortcut"]
+      pkgshare.install "shortcuts/README.md"
     test: |
       system "#{bin}/st", "--version"
 
