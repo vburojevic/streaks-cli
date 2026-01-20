@@ -100,8 +100,8 @@ func newActionsDescribeCmd(opts *rootOptions) *cobra.Command {
 			var mapped *config.ShortcutRef
 			if cfg, _, err := config.Load(); err == nil {
 				if ref, ok := cfg.Mappings[def.ID]; ok {
-					copy := ref
-					mapped = &copy
+					refCopy := ref
+					mapped = &refCopy
 				}
 			}
 			detail := actionDetail{

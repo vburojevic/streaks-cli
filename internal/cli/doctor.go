@@ -140,25 +140,3 @@ func printDoctor(report doctorReport) {
 		}
 	}
 }
-
-func printDoctorPlain(report doctorReport) {
-	status := func(ok bool) string {
-		if ok {
-			return "ok"
-		}
-		return "missing"
-	}
-	fmt.Printf("app\t%s\t%s\n", status(report.AppInstalled), report.AppPath)
-	fmt.Printf("shortcuts\t%s\t%s\n", status(report.ShortcutsCLI), report.ShortcutsCLIPath)
-	if len(report.ShortcutActionsMissing) == 0 {
-		fmt.Printf("actions\tok\t0\n")
-	} else {
-		fmt.Printf("actions\tmissing\t%d\n", len(report.ShortcutActionsMissing))
-		for _, action := range report.ShortcutActionsMissing {
-			fmt.Printf("action-missing\t%s\n", action)
-		}
-	}
-	for _, warning := range report.Warnings {
-		fmt.Printf("warning\t%s\n", warning)
-	}
-}

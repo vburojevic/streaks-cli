@@ -66,7 +66,7 @@ func TestRunActionCommandUsesExplicitShortcut(t *testing.T) {
 
 	called := ""
 
-	runShortcut = func(_ context.Context, name string, input []byte, _ shortcuts.RunOptions) ([]byte, error) {
+	runShortcut = func(_ context.Context, name string, _ []byte, _ shortcuts.RunOptions) ([]byte, error) {
 		called = name
 		return []byte(`{"ok":true}`), nil
 	}
