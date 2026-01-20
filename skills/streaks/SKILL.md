@@ -1,13 +1,13 @@
 ---
 name: streaks
-description: "Use when working with the Streaks CLI (`st`) to discover actions, link Shortcuts, run task actions, configure output (agent NDJSON, JSON UTI), troubleshoot install/doctor/discover, or interpret exit codes and JSON envelopes for automation."
+description: "Use when managing Streaks app habits via the Streaks CLI (`st`): discover actions, link Shortcuts, run habit/task actions, configure output (agent NDJSON, JSON UTI), troubleshoot install/doctor/discover, or interpret exit codes and JSON envelopes for automation."
 ---
 
 # Streaks CLI
 
 ## Overview
 
-Use this skill to operate or integrate the `st` CLI for the Streaks app with Shortcuts-based actions and the `streaks://` URL scheme.
+Use this skill to manage Streaks app habits via the `st` CLI with Shortcuts-based actions and the `streaks://` URL scheme.
 
 ## Quick start
 
@@ -22,13 +22,13 @@ Use this skill to operate or integrate the `st` CLI for the Streaks app with Sho
 3. Ensure shortcuts exist:
    - If missing, create them in Shortcuts or import wrapper `.shortcut` files with `st install --import`.
 4. Map custom shortcut names with `st link <action-id> --shortcut "Name"`.
-5. Run actions: `st <action> [--task "Task"]`.
+5. Run actions: `st <action> [--task "Habit"]`.
 6. When automating, enable agent mode and parse the last NDJSON line.
 
 ## Running actions
 
 - Use `st actions list` and `st actions describe <action>` to inspect available actions and required parameters.
-- Use `--task` for task-based actions.
+- Use `--task` for habit/task-based actions.
 - Use `--input` or `--stdin` to pass raw JSON input.
 - Use `--dry-run` to verify shortcut name + payload before execution.
 - Use `--trace <file>` to append JSONL trace records.
