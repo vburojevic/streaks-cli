@@ -93,6 +93,9 @@ func Execute() {
 func printError(message string, code int) {
 	if isTruthy(os.Getenv(envAgentMode)) {
 		payload := map[string]any{"error": message, "code": code}
+		if label := errorCodeLabel(code); label != "" {
+			payload["error_code"] = label
+		}
 		if code == ExitCodeUsage {
 			payload["hint"] = "Run `st help` or `st help <command>` to see usage."
 		}

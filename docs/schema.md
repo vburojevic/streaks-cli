@@ -14,7 +14,7 @@ Use `--agent` (or `STREAKS_CLI_AGENT=1`) to enable NDJSON output.
 NDJSON outputs are UTF-8 JSON objects printed one per line to stdout. Errors are printed to stderr as:
 
 ```json
-{"error":"message","code":10}
+{"error":"message","code":10,"error_code":"app_missing"}
 ```
 
 ## `st discover`

@@ -10,6 +10,23 @@ const (
 	ExitCodeActionFailed     = 13
 )
 
+func errorCodeLabel(code int) string {
+	switch code {
+	case ExitCodeUsage:
+		return "usage"
+	case ExitCodeAppMissing:
+		return "app_missing"
+	case ExitCodeShortcutsMissing:
+		return "shortcuts_missing"
+	case ExitCodeShortcutMissing:
+		return "shortcut_missing"
+	case ExitCodeActionFailed:
+		return "action_failed"
+	default:
+		return ""
+	}
+}
+
 type ExitError struct {
 	Code int
 	Err  error

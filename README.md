@@ -132,7 +132,7 @@ Usage errors in agent mode include a `hint` field pointing to `st help`.
 Errors are printed as JSON to stderr in agent mode, e.g.:
 
 ```json
-{"error":"message","code":10}
+{"error":"message","code":10,"error_code":"app_missing"}
 ```
 
 ## Agent usage
@@ -151,6 +151,7 @@ Action commands emit a stable JSON envelope in agent mode.
 
 - `docs/commands.md` – full command/flag reference.
 - `docs/schema.md` – JSON output schema.
+- `docs/agent.md` – agent best practices + examples.
 
 ## Docs
 
