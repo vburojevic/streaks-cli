@@ -9,6 +9,8 @@ description: "Use when managing Streaks app habits via the Streaks CLI (`st`): d
 
 Use this skill to manage Streaks app habits via the `st` CLI with Shortcuts-based actions and the `streaks://` URL scheme. The `st` CLI must be installed to use this skill.
 
+Install the CLI with Homebrew (`brew tap vburojevic/tap` then `brew install streaks-cli`) or from source (`make build`).
+
 ## Quick start
 
 - Run `st discover` and `st doctor` to validate app + Shortcuts readiness.
